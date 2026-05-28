@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# 빌드 산출물
+build/
+
+# 비밀정보 — 키움 app key/secret/token 은 절대 커밋 금지 (Keychain 사용)
+.env
+.env.*
+Secrets.plist
+secrets.json
+*.token
