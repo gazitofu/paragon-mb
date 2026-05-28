@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARAGON-MB — 관심종목 v0.1 comfortable</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- === SECTION: DEMO CONTROL BAR ==========================================
+     브라우저 데모 전용 상태 토글 UI
+     vanilla JS로 렌더링됨 (app.js §DEMO CONTROL BAR)
+     ======================================================================= -->
+<div id="demo-bar" class="demo-bar" role="navigation" aria-label="데모 상태 선택"></div>
+
+<!-- === SECTION: PANEL SHELL ===============================================
+     320pt 고정 폭 · Fixed-Width Single Column Vertical Stack (Plan §4.1)
+     헤더(Z1) sticky / 목록(Z2) 스크롤 / 액션바(Z3) 하단 고정
+     ======================================================================= -->
+<div class="panel" role="main" aria-label="PARAGON-MB 관심종목">
+
+  <!-- === SECTION: HEADER Z1 ==============================================
+       장 상태 라벨 + 갱신 시각 + 연결 상태 배지 (Plan §2.4 L1 / §7)
+       JS setHeader()에서 상태별로 내용 갱신
+       ===================================================================== -->
+  <header class="header" role="banner">
+    <div class="header-row">
+      <div class="header-left">
+        <span id="market-label" class="market-status-label" aria-live="polite">장중</span>
+        <span id="market-time" class="market-time" aria-live="polite"></span>
+      </div>
+      <div id="badge-slot" class="header-badge-slot" aria-live="polite"></div>
+    </div>
+    <div id="header-banner" class="header-banner" role="alert"></div>
+  </header>
+
+  <!-- === SECTION: W1 EMPTY STATE =========================================
+       빈 상태 뷰 — 아이콘 + 메시지 + Z3 CTA (wireframe §3 W1)
+       JS renderEmpty() + 하단 공유 action-bar에서 CTA 표시
+       ===================================================================== -->
+  <div id="view-empty" class="view" role="region" aria-label="빈 관심종목">
+    <!-- app.js renderEmpty()가 innerHTML 주입 -->
+  </div>
+
+  <!-- === SECTION: W2 LIST VIEW ===========================================
+       목록 뷰 — Z2 스크롤 영역 (wireframe §3 W2)
+       JS renderSymbols() / renderSkeletons()가 #symbol-list에 행 주입
+       ===================================================================== -->
+  <div id="view-list" class="view" role="region" aria-label="관심종목 목록">
+    <div class="list-scroll" role="list" aria-label="종목 목록">
+      <div id="symbol-list"></div>
+    </div>
+  </div>
+
+  <!-- === SECTION: W3 ADD FORM ============================================
+       종목 추가 뷰 — 입력 + 인라인 에러 + 등록/취소 (wireframe §3 W3)
+       JS renderAddForm()이 innerHTML 주입
+       ===================================================================== -->
+  <div id="view-add" class="view view-add" role="region" aria-label="종목 추가">
+    <!-- app.js renderAddForm()이 innerHTML 주입 -->
+  </div>
+
+  <!-- === SECTION: Z3 ACTION BAR ==========================================
+       하단 고정 "+ 종목 추가" 풀 너비 버튼 (Plan §4.3 comfortable variant)
+       W1/W2에서 노출, W3에서는 폼 내부 버튼 사용
+       ===================================================================== -->
+  <div id="action-bar" class="action-bar" role="complementary" aria-label="종목 추가 액션">
+    <button class="btn-add" id="btn-add-main" aria-label="종목 추가">
+      <!-- COPY.addButton — JS init() 후 설정 -->
+      + 종목 추가
+    </button>
+  </div>
+
+</div><!-- /panel -->
+
+<!-- === SECTION: TOAST =====================================================
+     삭제됨 · 되돌리기 — 하단 고정 슬롯 (wireframe §4 + Plan §5.4)
+     3s 자동 소멸. JS showToast()/hideToast() 제어
+     ====================================================================== -->
+<div class="toast-slot" role="status" aria-live="polite" aria-atomic="true">
+  <div id="toast" class="toast" aria-label="삭제 알림">
+    <span id="toast-msg"></span>
+    <span class="toast-sep">·</span>
+    <button id="toast-undo" class="toast-undo"></button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+
+<!-- === SECTION: INLINE INIT (btn-add-main 바인딩) ========================
+     DOMContentLoaded 이후 btn-add-main 클릭 핸들러 등록
+     ====================================================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var btnAddMain = document.getElementById('btn-add-main');
+  if (btnAddMain) {
+    // COPY 객체 준비 후 텍스트 갱신
+    if (typeof COPY !== 'undefined') btnAddMain.textContent = COPY.addButton;
+
+    btnAddMain.addEventListener('click', function() {
+      // W3 이미 열려 있으면 무시
+      if (typeof appState !== 'undefined' && appState.view.startsWith('w3')) return;
+      if (typeof switchView === 'function') switchView('w3-add');
+    });
+  }
+
+  // action-bar: W3에서 숨기기
+  var origSwitchView = typeof switchView === 'function' ? switchView : null;
+  if (origSwitchView) {
+    // action-bar visibility를 view 전환에 연동
+    var actionBar = document.getElementById('action-bar');
+    var patchSwitch = function(key) {
+      if (actionBar) {
+        actionBar.style.display = key.startsWith('w3') ? 'none' : '';
+      }
+    };
+    // DOM MutationObserver로 view.active 변경 감지 (대안: app.js 콜백 등록 불필요)
+    var observer = new MutationObserver(function() {
+      if (actionBar && typeof appState !== 'undefined') {
+        actionBar.style.display = appState.view.startsWith('w3') ? 'none' : '';
+      }
+    });
+    var viewAdd = document.getElementById('view-add');
+    if (viewAdd) observer.observe(viewAdd, { attributes: true, attributeFilter: ['class'] });
+  }
+});
+</script>
+
+</body>
+</html>

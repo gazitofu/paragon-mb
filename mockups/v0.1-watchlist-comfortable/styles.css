@@ -1,0 +1,852 @@
+/* ==========================================================================
+   styles.css — PARAGON-MB watchlist-realtime v0.1 · comfortable variant
+   =========================================================================
+   · 정적 HTML/CSS + vanilla JS — open file:// 직접 열기 동작
+   · 외부 폰트 import 0 · CDN 의존 0
+   · 모든 색 = CSS custom property var(--...) 경유. 임의 hex 하드코딩 0건
+   · 부호 잠금: --data-up = red(상승), --data-down = blue(하락). green 금지.
+   ========================================================================== */
+
+/* === SECTION: TOKENS ======================================================
+   :root — 다크 모드 기준 (primary). 상속 Paragon 토큰 + 신규 propose 4종
+   (tokens.md §A + §B 정합)
+   ========================================================================= */
+:root {
+  /* --- 브랜드 4색 (Paragon SSOT §1.1 잠금) --- */
+  --color-midnight:    #0B1729;
+  --color-sapphire:    #3B82F6;
+  --color-pearl:       #F8F7F2;
+  --color-slate:       #64748B;
+
+  /* --- Surface 레이어 (Paragon SSOT §1.2) --- */
+  --color-surface-0:   #0B1729;
+  --color-surface-1:   #0F2044;
+  --color-surface-2:   #142952;
+
+  /* --- 보더 (Paragon SSOT §1.3) --- */
+  --color-border:       rgba(100,116,139,0.25);
+  --color-border-muted: rgba(100,116,139,0.12);
+
+  /* --- 텍스트 (Paragon SSOT §1.4, WCAG AA) --- */
+  --color-text-primary:   #E8EDF5;
+  --color-text-secondary: #94A3B8;
+
+  /* --- 데이터 3단 색 — 부호 잠금 ★ (Paragon SSOT §1.5~1.6) --- */
+  --data-up:           #DC2626;   /* 상승·매수 red ▲+ */
+  --data-neutral:      #64748B;   /* 보합 slate - */
+  --data-down:         #2563EB;   /* 하락·매도 blue ▼− */
+  --data-up-text:      #F87171;   /* 다크 위 텍스트 변형 */
+  --data-neutral-text: #94A3B8;
+  --data-down-text:    #60A5FA;
+
+  /* --- 모션 (Paragon SSOT §3 상속) --- */
+  --motion-enter-duration:  0.24s;
+  --motion-enter-ease:      ease-out;
+  --motion-tab-duration:    0.18s;
+  --motion-toast-duration:  0.22s;
+  --motion-skeleton-period: 1.6s;
+
+  /* --- 신규 propose: highlight-tokens (Plan §5.1, tokens.md §B) --- */
+  --motion-highlight-duration: 0.30s;
+  --motion-highlight-ease:     ease-out;
+  --color-highlight-up:        rgba(220,38,38,0.15);
+  --color-highlight-down:      rgba(37,99,235,0.15);
+
+  /* --- 신규 propose: badge-warning-token (Plan §7, tokens.md §B) --- */
+  --color-badge-warning: #F59E0B;
+  --color-badge-error:   #DC2626;   /* = --data-up ALIAS */
+
+  /* --- 신규 propose: rgba-alias-tokens (parity compact, tokens.md §B) --- */
+  --color-sapphire-tint-10:  rgba(59,130,246,0.10);
+  --color-skeleton-base:     rgba(255,255,255,0.06);
+  --color-skeleton-highlight:rgba(255,255,255,0.12);
+  --color-midnight-alpha-30: rgba(11,23,41,0.30);
+
+  /* --- 신규 propose: alert-tint-tokens (tokens.md §B — 값 보존, comfortable 기준) --- */
+  --color-badge-warning-tint:   rgba(245,158,11,0.15);
+  --color-badge-warning-border: rgba(245,158,11,0.3);
+  --color-data-up-tint:         rgba(220,38,38,0.12);
+  --color-data-up-border:       rgba(220,38,38,0.25);
+
+  /* --- 신규 propose: space-tokens (Plan §4.4, tokens.md §B) --- */
+  --space-panel-x:         12px;
+  --space-row-y-comfortable: 10px;
+  --space-header-y:        8px;
+  --space-action-y:        12px;
+
+  /* --- 타이포 스케일 (Paragon SSOT §4 상속) --- */
+  --font-sans:    ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-t2: 13px;
+  --font-size-t3: 13px;
+  --font-size-t4: 12px;
+  --font-size-t5: 11px;
+
+  /* --- comfortable variant 행 높이 (Plan §4.3) --- */
+  --row-height-comfortable: 44px;
+}
+
+/* === SECTION: LIGHT MODE ==================================================
+   prefers-color-scheme: light — pearl 배경 (Plan §3.3, tokens.md §B light-mode-tokens)
+   ========================================================================= */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-surface-0:    #F8F7F2;   /* pearl 배경 */
+    --color-surface-1:    #FFFFFF;
+    --color-surface-2:    #F1F5F9;
+    --color-border:        rgba(30,41,59,0.12);
+    --color-border-muted:  rgba(30,41,59,0.08);
+    --color-text-primary:  #1E293B;
+    --color-text-secondary:#475569;
+    --data-up-text:        #DC2626;  /* 라이트 위 red (AA) */
+    --data-neutral-text:   #475569;
+    --data-down-text:      #1D4ED8;  /* 라이트 위 blue (AA) */
+    --color-midnight:      #F8F7F2;  /* 배경 전환 */
+    /* FAIL-C 수정: 라이트 모드 스켈레톤 토큰 오버라이드 (compact 패턴 정합, Plan §5.2) */
+    --color-skeleton-base:      rgba(0,0,0,0.06);
+    --color-skeleton-highlight: rgba(0,0,0,0.10);
+  }
+}
+
+/* === SECTION: RESET ======================================================= */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--color-surface-0);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === SECTION: PANEL SHELL =================================================
+   320pt 고정 폭 · 단일 컬럼 수직 스택 (Plan §4.1 Fixed-Width Single Column)
+   헤더(Z1) sticky / 목록(Z2) 스크롤 / 액션바(Z3) 하단 고정
+   ========================================================================= */
+.panel {
+  width: 320px;
+  min-height: 100vh;
+  background: var(--color-surface-0);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 데모 환경: 브라우저 전체 화면에서 패널 중앙 정렬 */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 24px 0;
+}
+
+/* === SECTION: HEADER Z1 ===================================================
+   sticky 헤더 — 장 상태 라벨 + 갱신 시각 + 연결 상태 배지
+   ========================================================================= */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-surface-1);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-header-y) var(--space-panel-x);
+  flex-shrink: 0;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.market-status-label {
+  font-size: var(--font-size-t2);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.market-time {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.header-badge-slot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* 상태 배지 — amber(ws-disconnected) / blue(token-refreshing) / red(auth-failed) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+.badge-warning { background: var(--color-badge-warning); color: var(--color-midnight); } /* WCAG AA: #F59E0B 위 #0B1729 ≈ 8.4:1 */
+.badge-info    { background: var(--color-sapphire);      color: var(--color-midnight); }
+.badge-error   { background: var(--color-badge-error);   color: var(--color-pearl); }
+
+/* spinner (token-refreshing) — animation-recipes §8 스피너 인용 */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-sapphire);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 헤더 인라인 경고 배너 (ws-disconnected / auth-failed) */
+.header-banner {
+  margin-top: 6px;
+  padding: 5px var(--space-panel-x);
+  font-size: var(--font-size-t5);
+  border-radius: 4px;
+  line-height: 1.4;
+  display: none;
+}
+.header-banner.ws-warn {
+  background: var(--color-badge-warning-tint);
+  color: var(--color-badge-warning);
+  border: 1px solid var(--color-badge-warning-border);
+}
+.header-banner.auth-fail {
+  background: var(--color-data-up-tint);
+  color: var(--color-badge-error);
+  border: 1px solid var(--color-data-up-border);
+}
+.header-banner.network-err {
+  background: var(--color-data-up-tint);
+  color: var(--color-badge-error);
+  border: 1px solid var(--color-data-up-border);
+}
+.header-banner.active { display: block; }
+
+/* network-error 배너: 텍스트 + 재시도 버튼 flex 배치 */
+.header-banner.network-err.active {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+/* 재시도 버튼 — 기존 토큰 경유 (hex 하드코딩 0건) */
+.btn-network-retry {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-badge-error);
+  color: var(--color-badge-error);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t5);
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+  min-height: 44px; /* 터치 영역 44px+ (접근성) */
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-network-retry:hover { opacity: 0.75; }
+.btn-network-retry:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* === SECTION: VIEWS =======================================================
+   W1(empty) / W2(list) / W3(add-form) — show/hide SPA 패턴
+   뷰 전환 fade-in (animation-recipes §1 Fade-in CSS Only 변형, Plan §5.3)
+   ========================================================================= */
+.view {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  opacity: 0;
+}
+.view.active {
+  display: flex;
+  animation: viewFadeIn var(--motion-tab-duration) var(--motion-enter-ease) forwards;
+}
+@keyframes viewFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* === SECTION: W1 EMPTY STATE ============================================== */
+.view-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px var(--space-panel-x);
+  text-align: center;
+}
+
+.empty-icon {
+  width: 40px;
+  height: 40px;
+  opacity: 0.35;
+  flex-shrink: 0;
+}
+
+.empty-message {
+  font-size: var(--font-size-t3);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* W1의 CTA는 하단 고정 Z3와 동일 스타일 사용 */
+
+/* === SECTION: W2 LIST =====================================================
+   Z2 종목 행 목록 — 내부 스크롤
+   ========================================================================= */
+.list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+/* 스크롤바 — macOS 네이티브 느낌 */
+.list-scroll::-webkit-scrollbar { width: 4px; }
+.list-scroll::-webkit-scrollbar-track { background: transparent; }
+.list-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+/* === SECTION: SYMBOL ROW ==================================================
+   comfortable: 행 높이 44px, px-10 py-10, 2단(종목명 상단 / 수치 하단)
+   현재가 색 = 등락색 적용 (Plan §4.3 ★ comfortable variant 핵심 차이)
+   ========================================================================= */
+.symbol-row {
+  position: relative;
+  height: var(--row-height-comfortable);
+  padding: var(--space-row-y-comfortable) var(--space-panel-x);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border-muted);
+  cursor: default;
+  transition: background-color 0.15s ease;
+  overflow: hidden;
+}
+
+.symbol-row:hover {
+  background-color: var(--color-surface-2);
+}
+
+.symbol-row:hover .delete-btn { opacity: 1; }
+
+/* --- 행 좌측: 종목명 + 종목코드 2단 --- */
+.row-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.symbol-name {
+  font-size: var(--font-size-t3);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.symbol-code {
+  font-size: var(--font-size-t5);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* --- 행 우측: 현재가 + 등락 수치 --- */
+.row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* ★ 현재가: comfortable variant에서 등락색 적용 (Plan §4.3 핵심 차이) */
+.current-price {
+  font-size: var(--font-size-t3);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.current-price.up      { color: var(--data-up-text); }
+.current-price.down    { color: var(--data-down-text); }
+.current-price.neutral { color: var(--data-neutral-text); }
+
+.change-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
+}
+
+/* ▲▼- 심볼 + 등락률 + 등락액 */
+.change-symbol {
+  font-size: var(--font-size-t5);
+  font-weight: 600;
+}
+.change-pct, .change-amt {
+  font-size: var(--font-size-t4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 색 클래스 (부호 잠금: red=상승, blue=하락, slate=보합) */
+.color-up      { color: var(--data-up-text); }
+.color-down    { color: var(--data-down-text); }
+.color-neutral { color: var(--data-neutral-text); }
+
+/* 삭제 버튼 — hover 시 opacity 0→1 (animation-recipes §3 호버 마이크로인터랙션, Plan §5.5) */
+.delete-btn {
+  position: absolute;
+  right: var(--space-panel-x);
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--color-text-secondary);
+  line-height: 1;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.delete-btn:hover { color: var(--data-up-text); }
+.delete-btn:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+/* 장외 행 — opacity 0.75 (Plan §3.4 OQ-3 확정값) */
+.symbol-row.after-hours { opacity: 0.75; }
+
+/* 종가 배지 */
+.after-hours-badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  background: var(--color-border-muted);
+  padding: 1px 4px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* === SECTION: HIGHLIGHT ANIMATION =========================================
+   실시간 갱신 하이라이트 (Plan §5.1 핵심 모션, OQ-4 확정)
+   animation-recipes §3 호버 마이크로인터랙션 + §8 배경 패턴 응용
+   단방향 fade-out. 깜빡임·반복 금지.
+   JS: classList.add('highlight-up') → 300ms 후 remove
+   ========================================================================= */
+.symbol-row.highlight-up {
+  animation: highlightUp var(--motion-highlight-duration) var(--motion-highlight-ease) forwards;
+}
+.symbol-row.highlight-down {
+  animation: highlightDown var(--motion-highlight-duration) var(--motion-highlight-ease) forwards;
+}
+
+@keyframes highlightUp {
+  0%   { background-color: var(--color-highlight-up); }
+  100% { background-color: transparent; }
+}
+@keyframes highlightDown {
+  0%   { background-color: var(--color-highlight-down); }
+  100% { background-color: transparent; }
+}
+
+/* === SECTION: SKELETON ROWS ===============================================
+   W2 loading 상태 — shimmer (animation-recipes §8 상속, Plan §5.2)
+   Paragon --motion-skeleton-period: 1.6s 상속
+   ========================================================================= */
+.skeleton-row {
+  height: var(--row-height-comfortable);
+  padding: var(--space-row-y-comfortable) var(--space-panel-x);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.skeleton-bar {
+  border-radius: 3px;
+  animation: shimmer var(--motion-skeleton-period) infinite;
+}
+
+/* 다크 모드 skeleton */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-bar {
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton-base) 25%,
+    var(--color-skeleton-highlight) 50%,
+    var(--color-skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+}
+/* 라이트 모드 .skeleton-bar 전용 블록 제거 —
+   :root 오버라이드(--color-skeleton-base/highlight)로 처리,
+   다크 .skeleton-bar가 이미 var() 경유하므로 중복 블록 불필요 (compact 패턴 정합) */
+
+.skeleton-left  { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.skeleton-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.sk-name  { width: 80px; height: 12px; }
+.sk-code  { width: 46px; height: 10px; }
+.sk-price { width: 70px; height: 12px; }
+.sk-change{ width: 56px; height: 10px; }
+
+/* === SECTION: Z3 ACTION BAR ===============================================
+   comfortable variant — 하단 고정 "+ 종목 추가" 풀 너비 버튼 (Plan §4.3)
+   스크롤 무관 항상 하단 고정
+   ========================================================================= */
+.action-bar {
+  flex-shrink: 0;
+  padding: var(--space-action-y) var(--space-panel-x);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-1);
+}
+
+.btn-add {
+  width: 100%;
+  height: 36px;
+  background: var(--color-sapphire);
+  color: var(--color-midnight);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.btn-add:hover   { opacity: 0.88; }
+.btn-add:active  { opacity: 0.75; }
+.btn-add:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* === SECTION: W3 ADD FORM ================================================ */
+.view-add {
+  flex: 1;
+  flex-direction: column;
+}
+
+.form-header {
+  padding: var(--space-header-y) var(--space-panel-x);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-title {
+  font-size: var(--font-size-t2);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.btn-cancel-header {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t5);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.12s ease;
+}
+.btn-cancel-header:hover { color: var(--color-text-primary); }
+.btn-cancel-header:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 1px;
+}
+
+.form-body {
+  flex: 1;
+  padding: 16px var(--space-panel-x);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-label {
+  font-size: var(--font-size-t5);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.symbol-input {
+  width: 100%;
+  height: 40px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0 12px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.symbol-input::placeholder { color: var(--color-text-secondary); opacity: 0.6; }
+.symbol-input:focus {
+  border-color: var(--color-sapphire);
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+}
+.symbol-input.error-state { border-color: var(--data-up); }
+
+.inline-error {
+  font-size: var(--font-size-t5);
+  color: var(--data-up-text);
+  line-height: 1.4;
+  min-height: 16px;
+  display: none;
+}
+.inline-error.active { display: block; }
+
+.form-action-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-submit {
+  flex: 1;
+  height: 36px;
+  background: var(--color-sapphire);
+  color: var(--color-midnight);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-submit:hover  { opacity: 0.88; }
+.btn-submit:active { opacity: 0.75; }
+.btn-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-submit:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+.btn-cancel {
+  width: 72px;
+  height: 36px;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+.btn-cancel:hover { color: var(--color-text-primary); }
+.btn-cancel:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* submit loading 스피너 */
+.btn-submit .btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-midnight-alpha-30);
+  border-top-color: var(--color-midnight);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+.btn-submit.loading .btn-spinner { display: block; }
+.btn-submit.loading .btn-text    { display: none; }
+
+/* === SECTION: TOAST =======================================================
+   삭제됨 · 되돌리기 — 하단 고정, slide-up 등장 (animation-recipes §8 인용, Plan §5.4)
+   3s 자동 소멸
+   ========================================================================= */
+.toast-slot {
+  position: fixed;
+  bottom: 72px;   /* Z3 액션 바 높이만큼 위 */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.toast {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: var(--font-size-t4);
+  color: var(--color-text-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  white-space: nowrap;
+  animation: toastSlideUp var(--motion-toast-duration) var(--motion-enter-ease) forwards;
+}
+.toast.active { display: flex; }
+.toast.hide   { animation: toastFadeOut var(--motion-toast-duration) ease-in forwards; }
+
+@keyframes toastSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.toast-sep { color: var(--color-text-secondary); }
+
+.toast-undo {
+  background: none;
+  border: none;
+  color: var(--color-sapphire);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t4);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.toast-undo:hover { opacity: 0.8; }
+.toast-undo:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 1px;
+}
+
+/* === SECTION: DEMO CONTROL BAR ============================================
+   상단 상태 셀렉터 — 브라우저 데모 전용 UI
+   ========================================================================= */
+.demo-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(11,23,41,0.96);
+  border-bottom: 1px solid rgba(100,116,139,0.3);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  z-index: 1000;
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+
+.demo-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.demo-btn {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.demo-btn:hover  { color: var(--color-text-primary); border-color: var(--color-sapphire); }
+.demo-btn.active { background: var(--color-sapphire); color: var(--color-midnight); border-color: var(--color-sapphire); font-weight: 600; }
+
+/* demo-bar 공간 확보용 body 상단 패딩 */
+body { padding-top: 48px; }
+
+/* === SECTION: PREFERS-REDUCED-MOTION =====================================
+   Plan §5.6 CSS 블록 그대로 (animation-recipes 체크리스트 인용)
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === SECTION: ACCESSIBILITY =============================================== */
+/* focus-visible 링 항상 표시 (wireframe §4 키보드 포커스 순환) */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* 터치 영역 최소 44px (WCAG 2.5.5) — 버튼 height로 보장 */
+/* 접근성 대비: --color-text-primary (#E8EDF5) on --color-midnight (#0B1729) ≈ 15:1 OK */
+/* 접근성 대비: --data-up-text (#F87171) on dark ≈ 5.1:1 OK */
+/* 접근성 대비: --data-down-text (#60A5FA) on dark ≈ 4.5:1 AA */

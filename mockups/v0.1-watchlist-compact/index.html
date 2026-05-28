@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<!-- === SECTION: head ===
+  PARAGON-MB compact variant — index.html
+  매체: 정적 HTML/CSS, open file:// 브라우저 프리뷰
+  320pt 팝오버 패널 시각 잠금 목업 (SwiftUI 번역 전 레퍼런스)
+  Plan §11 기준선 정합 — 폰트·컬러·모션·레이아웃·카피 임의 변경 0건
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PARAGON-MB — Watchlist compact v0.1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- === SECTION: demo-wrapper ===
+  데모 전용 외부 래퍼. 실제 NSPopover에는 .panel 이하만 존재.
+  상단 상태 셀렉터로 모든 wireframe 상태를 브라우저에서 토글 가능. -->
+<div class="demo-wrapper">
+
+  <!-- 데모 제목 -->
+  <p class="demo-label">PARAGON-MB · Watchlist Compact v0.1 · 상태 셀렉터</p>
+
+  <!-- 상태 토글 버튼 컨테이너 (app.js가 동적으로 생성) -->
+  <div class="demo-controls" id="demo-controls" role="toolbar" aria-label="데모 상태 선택"></div>
+
+  <!-- === SECTION: panel ===
+    320pt 팝오버 패널 본체. 헤더(Z1) + 뷰 콘텐츠(Z2) + 토스트 슬롯.
+    compact variant: "+" 버튼 = 헤더 Z1 우측 (Plan §4.3) -->
+  <div class="panel" role="main" aria-label="관심종목 패널">
+
+    <!-- Z1 헤더 (sticky) -->
+    <header class="panel-header" id="panel-header">
+      <span class="header-market-label" id="header-market-label" aria-live="polite">장중</span>
+      <span class="header-updated" id="header-updated" aria-live="polite"></span>
+      <div class="header-actions">
+        <!-- 상태 배지 슬롯 (ws-disconnected / token-refreshing / auth-failed) -->
+        <span id="header-badge-slot" aria-live="polite"></span>
+        <!-- compact "+": 헤더 Z1 우측 (Plan §4.3 compact variant 핵심 차이) -->
+        <button
+          class="btn-add-header"
+          id="btn-add-header"
+          aria-label="종목 추가"
+          title="종목 추가"
+        >+</button>
+      </div>
+    </header>
+
+    <!-- 헤더 인라인 경고/인디케이터 배너 -->
+    <div id="header-alert" class="header-alert" role="alert" style="display:none;"></div>
+
+    <!-- === SECTION: view-empty ===
+      W1 — 빈 상태 (wireframe §3 W1 SSOT) -->
+    <div class="view" id="view-empty" role="region" aria-label="빈 상태">
+      <div class="empty-state">
+        <div class="empty-icon" aria-hidden="true">◇</div>
+        <p class="empty-message">아직 등록된 종목이 없습니다</p>
+        <button
+          class="btn-empty-cta"
+          id="btn-empty-cta"
+        >+ 종목 추가</button>
+      </div>
+    </div>
+
+    <!-- === SECTION: view-list ===
+      W2 — 목록 뷰 (wireframe §3 W2 SSOT)
+      loading: 스켈레톤 / normal: 종목 행 / ws-disconnected / token-refreshing / auth-failed -->
+    <div class="view" id="view-list" role="region" aria-label="관심종목 목록">
+      <!-- Z2 종목 행 목록 (내부 스크롤) -->
+      <div
+        class="symbol-list"
+        id="symbol-list-container"
+        role="list"
+        aria-label="관심종목"
+      ></div>
+    </div>
+
+    <!-- === SECTION: view-add ===
+      W3 — 종목 등록 폼 (wireframe §3 W3 SSOT)
+      idle / loading / error 4종 상태 -->
+    <div class="view" id="view-add" role="region" aria-label="종목 추가">
+      <div class="add-form-view">
+        <div class="add-form-field">
+          <label class="add-form-label" for="add-input">종목코드</label>
+          <input
+            class="add-form-input"
+            id="add-input"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="예: 005930"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="add-error"
+          />
+          <!-- 인라인 에러 (Plan §6.4 SSOT 4종) -->
+          <span
+            class="add-form-error"
+            id="add-error"
+            role="alert"
+            aria-live="assertive"
+          ></span>
+        </div>
+
+        <div class="add-form-actions">
+          <button
+            class="btn-submit"
+            id="btn-submit"
+            type="button"
+          >
+            <span class="btn-submit-inner">
+              <span class="btn-spinner" aria-hidden="true"></span>
+              <span class="btn-label">등록</span>
+            </span>
+          </button>
+          <button
+            class="btn-cancel"
+            id="btn-cancel"
+            type="button"
+          >취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- === SECTION: toast-slot ===
+      삭제 토스트 슬롯 — 패널 하단 고정 (Plan §5.4)
+      "삭제됨 · 되돌리기" — app.js가 동적으로 생성 -->
+    <div class="toast-slot" id="toast-slot" aria-live="polite"></div>
+
+  </div><!-- /.panel -->
+
+</div><!-- /.demo-wrapper -->
+
+<script src="app.js"></script>
+</body>
+</html>

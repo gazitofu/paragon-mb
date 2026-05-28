@@ -1,0 +1,883 @@
+/* === SECTION: tokens-root === */
+/* PARAGON-MB compact variant — styles.css
+   토큰 SSOT: tokens.md §A(상속) + §B(신규 propose)
+   매체: 정적 HTML/CSS, open file:// 브라우저 프리뷰
+   시스템 폰트 단독 — 외부 CDN 0건 */
+
+:root {
+  /* === 상속 토큰: Paragon design-language.md §1.1 브랜드 === */
+  --color-midnight: #0B1729;
+  --color-sapphire: #3B82F6;
+  --color-pearl: #F8F7F2;
+  --color-slate: #64748B;
+
+  /* === 상속 토큰: design-language.md §1.2 Surface === */
+  --color-surface-1: #0F2044;
+  --color-surface-2: #142952;
+
+  /* === 상속 토큰: design-language.md §1.3 보더 === */
+  --color-border: rgba(100,116,139,0.25);
+  --color-border-muted: rgba(100,116,139,0.12);
+
+  /* === 상속 토큰: design-language.md §1.4 텍스트 === */
+  --color-text-primary: #E8EDF5;
+  --color-text-secondary: #94A3B8;
+
+  /* === 상속 토큰: design-language.md §1.5 데이터 3단 부호 잠금 ★ 절대 변경 금지 === */
+  --data-up: #DC2626;       /* 상승·매수 — red ▲ + */
+  --data-neutral: #64748B;  /* 보합·중립 — slate */
+  --data-down: #2563EB;     /* 하락·매도 — blue ▼ − */
+
+  /* === 상속 토큰: design-language.md §1.6 접근성 텍스트 변형 === */
+  --data-up-text: #F87171;
+  --data-neutral-text: #94A3B8;
+  --data-down-text: #60A5FA;
+
+  /* === 상속 토큰: design-language.md §4.1 폰트 === */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* === 상속 토큰: design-language.md §4.2 폰트 스케일 === */
+  --font-size-t2: 13px;
+  --font-size-t3: 13px;
+  --font-size-t4: 12px;
+  --font-size-t5: 11px;
+
+  /* === 상속 토큰: design-language.md §5 모션 === */
+  --motion-tab-duration: 0.18s;
+  --motion-toast-duration: 0.22s;
+  --motion-skeleton-period: 1.6s;
+
+  /* === 신규 propose 토큰: highlight (tokens.md §B) === */
+  --motion-highlight-duration: 0.30s;
+  --motion-highlight-ease: ease-out;
+  --color-highlight-up: rgba(220,38,38,0.15);
+  --color-highlight-down: rgba(37,99,235,0.15);
+
+  /* === 신규 propose 토큰: badge (tokens.md §B) === */
+  --color-badge-warning: #F59E0B;
+  --color-badge-error: #DC2626;
+
+  /* === 신규 propose 토큰: space (tokens.md §B) === */
+  --space-panel-x: 12px;
+  --space-row-y-compact: 6px;
+  --space-header-y: 8px;
+  --space-action-y: 12px;
+
+  /* === 신규 propose 토큰: alpha-tints (tokens.md §B) — FAIL-C 수정 ===
+     직접 rgba 사용 0건. 토큰 경유로 교체 */
+  --color-sapphire-tint-10: rgba(59,130,246,0.10);
+  --color-skeleton-base: rgba(255,255,255,0.06);
+  --color-skeleton-highlight: rgba(255,255,255,0.12);
+  --color-midnight-alpha-30: rgba(11,23,41,0.30);
+  --color-badge-warning-tint-10: rgba(245,158,11,0.10);  /* amber 10% — .header-alert.warning 배경 */
+  --color-data-up-tint-10: rgba(220,38,38,0.10);         /* red 10% — .header-alert.error/.network-error 배경 */
+
+  /* === 다크 모드 (default) 색 별칭 === */
+  --bg-app: var(--color-midnight);
+  --bg-panel: var(--color-surface-1);
+  --bg-hover: var(--color-surface-2);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --border: var(--color-border);
+  --border-muted: var(--color-border-muted);
+  --data-up-display: var(--data-up-text);
+  --data-down-display: var(--data-down-text);
+  --data-neutral-display: var(--data-neutral-text);
+}
+
+/* === SECTION: light-mode === */
+@media (prefers-color-scheme: light) {
+  :root {
+    /* 신규 propose: light-mode-tokens (tokens.md §B) */
+    --bg-app: var(--color-pearl);
+    --bg-panel: #FFFFFF;
+    --bg-hover: #F1F5F9;
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --border: rgba(30,41,59,0.12);
+    --border-muted: rgba(30,41,59,0.08);
+    --data-up-display: #DC2626;
+    --data-down-display: #1D4ED8;
+    --data-neutral-display: #475569;
+    /* FAIL-A 수정: 라이트 모드 data-text 오버라이드 — comfortable variant 패턴 정합
+       pearl 배경 위 AA 충족: #DC2626 ≈4.8:1 / #1D4ED8 ≈5.2:1 / #475569 ≈5.9:1 */
+    --data-up-text: #DC2626;
+    --data-down-text: #1D4ED8;
+    --data-neutral-text: #475569;
+    /* FAIL-C 수정: 라이트 모드 스켈레톤 토큰 오버라이드 (Plan §5.2 라이트 명시값) */
+    --color-skeleton-base: rgba(0,0,0,0.06);
+    --color-skeleton-highlight: rgba(0,0,0,0.10);
+  }
+}
+
+/* === SECTION: reduced-motion === */
+/* Plan §5.6 — animation-recipes prefers-reduced-motion 체크리스트 인용 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === SECTION: reset-base === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+}
+
+/* === SECTION: demo-chrome === */
+/* 데모 전용 외부 래퍼 — 실제 SwiftUI 팝오버에서는 불필요 */
+.demo-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 64px;
+  gap: 24px;
+  background: var(--bg-app);
+}
+
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: 560px;
+}
+
+.demo-label {
+  font-size: var(--font-size-t5);
+  color: var(--text-secondary);
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.demo-btn {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t5);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+
+.demo-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.demo-btn.active {
+  background: var(--color-sapphire);
+  color: var(--color-midnight);
+  border-color: var(--color-sapphire);
+}
+
+/* === SECTION: panel-frame === */
+/* 320pt 팝오버 패널 — macOS NSPopover 시각 잠금 */
+.panel {
+  width: 320px;
+  min-height: 240px;
+  max-height: 520px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  /* 레이어드 섀도우 — design-principles.md 아름다운 디테일 §Shadow */
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.12),
+    0 4px 8px rgba(0,0,0,0.12),
+    0 12px 24px rgba(0,0,0,0.10);
+}
+
+/* === SECTION: header === */
+/* Z1 — sticky 헤더. 장 상태 + 갱신 시각 + 상태 배지 */
+.panel-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-header-y) var(--space-panel-x);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-market-label {
+  font-size: var(--font-size-t2);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.header-updated {
+  font-size: var(--font-size-t5);
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 헤더 우측 아이콘 그룹 */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* compact "+": 헤더 Z1 우측 아이콘 (Plan §4.3) */
+.btn-add-header {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--color-sapphire);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease;
+}
+
+.btn-add-header:hover {
+  background: var(--bg-hover);
+}
+
+.btn-add-header:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* 상태 배지 */
+.status-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.status-badge.warning {
+  background: var(--color-badge-warning);
+  color: var(--color-midnight); /* on amber — design-language.md §1.9 on-color 원칙 */
+}
+
+.status-badge.error {
+  background: var(--color-badge-error);
+  color: var(--color-pearl); /* on red danger — design-language.md §1.9 on-color 원칙 */
+}
+
+/* spinner (token-refreshing) */
+.status-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--color-sapphire);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 헤더 인라인 경고 (ws-disconnected / auth-failed) */
+.header-alert {
+  width: 100%;
+  padding: 5px var(--space-panel-x);
+  font-size: var(--font-size-t5);
+  border-bottom: 1px solid var(--border-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-alert.warning {
+  background: var(--color-badge-warning-tint-10); /* tokens.md §B alpha-tint-tokens */
+  color: var(--color-badge-warning); /* tokens.md §B badge-warning-token */
+}
+
+.header-alert.info {
+  background: var(--color-sapphire-tint-10); /* sapphire 10% tint — token-refreshing 인디케이터 */
+  color: var(--color-sapphire);
+}
+
+.header-alert.error {
+  background: var(--color-data-up-tint-10); /* tokens.md §B alpha-tint-tokens */
+  color: var(--data-up-text);
+}
+
+/* network-error 배너 — auth-failed 위치/스타일 재사용, 재시도 버튼 포함 (wireframe §5 W2)
+   justify-content: space-between 으로 텍스트↔버튼 분리 */
+.header-alert.network-error {
+  background: var(--color-data-up-tint-10); /* tokens.md §B alpha-tint-tokens */
+  color: var(--data-up-text);
+  justify-content: space-between;
+}
+
+.network-error-msg {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 재시도 버튼 — 인라인 compact, 토큰 경유 (임의 hex 0건) */
+.btn-network-retry {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t5);
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--data-up-text);
+  background: transparent;
+  color: var(--data-up-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+  /* 최소 터치 영역: 높이는 배너 패딩으로 충족, 가시 영역은 ~22px
+     실제 macOS 메뉴바 팝오버 — 마우스 전용 환경, 44px 터치 타깃 불요
+     모바일 미지원 목업 특성상 패딩 tight 유지 (Plan §4.3 compact) */
+}
+
+.btn-network-retry:hover {
+  background: var(--data-up-text);
+  color: var(--bg-panel);
+}
+
+.btn-network-retry:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* === SECTION: view-body === */
+/* Z2 — 뷰 콘텐츠 영역. 뷰 전환: opacity 0.18s (Plan §5.3) */
+.view {
+  display: none;
+  opacity: 0;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.view.active {
+  display: flex;
+  animation: fadeIn var(--motion-tab-duration) ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* === SECTION: empty-state === */
+/* W1 — 빈 상태 (Plan §4.2 EmptyState) */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px var(--space-panel-x);
+  text-align: center;
+}
+
+.empty-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.empty-message {
+  font-size: var(--font-size-t3);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.btn-empty-cta {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: none;
+  background: var(--color-sapphire);
+  color: var(--color-midnight);
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.btn-empty-cta:hover {
+  opacity: 0.88;
+}
+
+.btn-empty-cta:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* === SECTION: symbol-list === */
+/* W2 Z2 — 종목 행 목록 (내부 스크롤) */
+.symbol-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.symbol-list::-webkit-scrollbar {
+  width: 4px;
+}
+.symbol-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.symbol-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* === SECTION: symbol-row === */
+/* W2 Z2 — 단일 종목 행 (Plan §4.3 compact: 32px, 1줄) */
+.symbol-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--space-row-y-compact) var(--space-panel-x);
+  height: 32px;
+  border-bottom: 1px solid var(--border-muted);
+  gap: 6px;
+  cursor: default;
+  transition: background var(--motion-tab-duration) ease;
+}
+
+.symbol-row:hover {
+  background: var(--bg-hover);
+}
+
+/* FAIL-B 수정: focus-visible 커스텀 링 — SaaS 체크리스트 "focus-visible 항상 표시" 충족
+   offset 음수: 32px 고밀도 행에서 링이 외부로 삐져나가지 않도록 */
+.symbol-row:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: -2px;
+}
+
+.symbol-row:last-child {
+  border-bottom: none;
+}
+
+/* 장외 행 (Plan §3.4 OQ-3 확정 75%) */
+.symbol-row.market-closed {
+  opacity: 0.75;
+}
+
+/* 실시간 갱신 하이라이트 (Plan §5.1 핵심 모션)
+   animation-recipes §3 호버 마이크로인터랙션 응용 — CSS background-color transition */
+.symbol-row.highlight-up {
+  background: var(--color-highlight-up);
+  transition: background var(--motion-highlight-duration) var(--motion-highlight-ease);
+}
+
+.symbol-row.highlight-down {
+  background: var(--color-highlight-down);
+  transition: background var(--motion-highlight-duration) var(--motion-highlight-ease);
+}
+
+/* 종목명 (좌측) */
+.row-name {
+  font-size: var(--font-size-t3);
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 종가 배지 (장외) */
+.badge-closing {
+  font-size: var(--font-size-t5);
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-muted);
+  border-radius: 3px;
+  padding: 1px 4px;
+  flex-shrink: 0;
+}
+
+/* 수치 그룹 (우측 정렬) */
+.row-data {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: var(--font-size-t4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 현재가 — compact: 등락색 없음, text-primary 중립 (Plan §4.3) */
+.row-price {
+  color: var(--text-primary);
+  font-weight: 400;
+  min-width: 52px;
+  text-align: right;
+}
+
+/* 등락 심볼 + 수치 (Plan §3.1 데이터 3색 부호 잠금) */
+.row-change {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 68px;
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.row-change.up   { color: var(--data-up-display); }
+.row-change.down { color: var(--data-down-display); }
+.row-change.neutral { color: var(--data-neutral-display); }
+
+.change-symbol {
+  font-size: var(--font-size-t5);
+  flex-shrink: 0;
+}
+
+.change-pct {
+  font-weight: 500;
+}
+
+/* 삭제 아이콘 (호버 시 opacity 0→1, 0.15s — Plan §5.5, animation-recipes §3) */
+.btn-delete-row {
+  position: absolute;
+  right: var(--space-panel-x);
+  opacity: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, color 0.12s ease;
+  padding: 0;
+}
+
+.symbol-row:hover .btn-delete-row {
+  opacity: 1;
+}
+
+.btn-delete-row:hover {
+  color: var(--data-up-text);
+}
+
+.btn-delete-row:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 1px;
+}
+
+/* === SECTION: skeleton === */
+/* W2 loading 상태 — animation-recipes §8 shimmer 패턴
+   Plan §5.2 인용: period 1.6s (Paragon --motion-skeleton-period 상속) */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  padding: var(--space-row-y-compact) var(--space-panel-x);
+  height: 32px;
+  border-bottom: 1px solid var(--border-muted);
+  gap: 8px;
+}
+
+.skeleton-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-block {
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton-base) 25%,
+    var(--color-skeleton-highlight) 50%,
+    var(--color-skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--motion-skeleton-period) infinite;
+}
+
+@media (prefers-color-scheme: light) {
+  .skeleton-block {
+    background: linear-gradient(
+      90deg,
+      var(--color-skeleton-base) 25%,
+      var(--color-skeleton-highlight) 50%,
+      var(--color-skeleton-base) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer var(--motion-skeleton-period) infinite;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-name  { flex: 1; height: 11px; }
+.skeleton-price { width: 52px; height: 11px; }
+.skeleton-change { width: 56px; height: 11px; }
+
+/* === SECTION: add-form === */
+/* W3 — 종목 등록 폼 (Plan §4.2 AddSymbolForm) */
+.add-form-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px var(--space-panel-x);
+  gap: 12px;
+}
+
+.add-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.add-form-label {
+  font-size: var(--font-size-t5);
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.add-form-input {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-variant-numeric: tabular-nums;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.12s ease;
+  width: 100%;
+}
+
+.add-form-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.add-form-input:focus {
+  border-color: var(--color-sapphire);
+}
+
+.add-form-input.has-error {
+  border-color: var(--data-up);
+}
+
+.add-form-error {
+  font-size: var(--font-size-t5);
+  color: var(--data-up-text);
+  display: none;
+  line-height: 1.4;
+}
+
+.add-form-error.visible {
+  display: block;
+}
+
+.add-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-submit {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 500;
+  padding: 7px 0;
+  flex: 1;
+  border-radius: 6px;
+  border: none;
+  background: var(--color-sapphire);
+  color: var(--color-midnight);
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.btn-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-submit:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+.btn-cancel {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 400;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.btn-cancel:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-cancel:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* loading 중 버튼 인디케이터 */
+.btn-submit-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-midnight-alpha-30);
+  border-top-color: var(--color-midnight);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+
+.btn-submit.loading .btn-spinner {
+  display: block;
+}
+
+/* === SECTION: toast === */
+/* 삭제 토스트 — slide-up 0.22s, 3s 자동 소멸 (Plan §5.4, animation-recipes §8)
+   패널 하단 고정 슬롯 */
+.toast-slot {
+  position: absolute;
+  bottom: 12px;
+  left: var(--space-panel-x);
+  right: var(--space-panel-x);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: var(--font-size-t4);
+  pointer-events: auto;
+  /* slide-up 등장 (Plan §5.4, animation-recipes §8 응용) */
+  animation: toastIn var(--motion-toast-duration) ease-out forwards;
+  /* 레이어드 섀도우 */
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.18),
+    0 6px 16px rgba(0,0,0,0.14);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast.hiding {
+  animation: toastOut var(--motion-toast-duration) ease-in forwards;
+}
+
+@keyframes toastOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.toast-text {
+  color: var(--text-primary);
+}
+
+.btn-undo {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t4);
+  font-weight: 500;
+  color: var(--color-sapphire);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 0 12px;
+  flex-shrink: 0;
+}
+
+.btn-undo:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 1px;
+  border-radius: 2px;
+}

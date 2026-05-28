@@ -1,0 +1,1110 @@
+/* === SECTION: tokens-root ===
+   PARAGON-MB compact variant v0.2 — styles.css
+   토큰 SSOT: tokens.md §A(상속) + §B(신규) + §C(라이트 §9.5)
+   매체: 정적 HTML/CSS, open file:// 브라우저 프리뷰
+   시스템 폰트 단독 — 외부 CDN 0건
+   다크 = :root 기본 / 라이트 = [data-theme="light"] (prefers-color-scheme 폐기) */
+
+:root {
+  /* === 상속 토큰: Paragon design-language.md §1.1 브랜드 === */
+  --color-midnight: #0B1729;
+  --color-sapphire: #3B82F6;
+  --color-pearl: #F8F7F2;
+  --color-slate: #64748B;
+
+  /* === 상속 토큰: design-language.md §1.2 Surface === */
+  --color-surface-1: #0F2044;
+  --color-surface-2: #142952;
+
+  /* === 상속 토큰: design-language.md §1.3 보더 === */
+  --color-border: rgba(100,116,139,0.25);
+  --color-border-muted: rgba(100,116,139,0.12);
+
+  /* === 상속 토큰: design-language.md §1.4 텍스트 === */
+  --color-text-primary: #E8EDF5;
+  --color-text-secondary: #94A3B8;
+
+  /* === 상속 토큰: design-language.md §1.5 데이터 3단 부호 잠금 ★ 절대 변경 금지 === */
+  --data-up: #DC2626;       /* 상승·매수 — red ▲ + */
+  --data-neutral: #64748B;  /* 보합·중립 — slate */
+  --data-down: #2563EB;     /* 하락·매도 — blue ▼ − */
+
+  /* === 상속 토큰: design-language.md §1.6 접근성 텍스트 변형 === */
+  --data-up-text: #F87171;
+  --data-neutral-text: #94A3B8;
+  --data-down-text: #60A5FA;
+
+  /* === 상속 토큰: design-language.md §4.1 폰트 === */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* === 상속 토큰: design-language.md §4.2 폰트 스케일 === */
+  --font-size-t2: 13px;
+  --font-size-t3: 13px;
+  --font-size-t4: 12px;
+  --font-size-t5: 11px;
+
+  /* === 상속 토큰: design-language.md §5 모션 === */
+  --motion-tab-duration: 0.18s;
+  --motion-toast-duration: 0.22s;
+  --motion-skeleton-period: 1.6s;
+
+  /* === 신규 propose 토큰: highlight (tokens.md §B) === */
+  --motion-highlight-duration: 0.30s;
+  --motion-highlight-ease: ease-out;
+  --color-highlight-up: rgba(220,38,38,0.15);
+  --color-highlight-down: rgba(37,99,235,0.15);
+
+  /* === 신규 propose 토큰: badge (tokens.md §B) === */
+  --color-badge-warning: #F59E0B;
+  --color-badge-error: #DC2626;
+
+  /* === 신규 propose 토큰: shadow (tokens.md §B — refine R3 D항) ===
+     box-shadow 직접 rgba 토큰화. 테마 무관 구조값 — 투명도 고정.
+     다크/라이트 동일(그림자는 항상 검정 alpha). */
+  --shadow-panel:
+    0 1px 2px rgba(0,0,0,0.12),
+    0 4px 8px rgba(0,0,0,0.12),
+    0 12px 24px rgba(0,0,0,0.10);
+  --shadow-toast:
+    0 2px 6px rgba(0,0,0,0.18),
+    0 6px 16px rgba(0,0,0,0.14);
+
+  /* === 신규 propose 토큰: font-size 전용값 (tokens.md §B — refine R3 E항) ===
+     10px: 스케일 외 전용 — 오너 승인 status/badge 전용값.
+     16px: "+" 글리프 전용 — 버튼 내부 아이콘 단독 사용.
+     두 값 모두 design-plan §4.3 / §3.4 오너 승인 치수. */
+  --font-size-status: 10px;   /* header-status-text / status-badge (스케일 외 오너 승인) */
+  --font-size-icon-plus: 16px; /* btn-add-header "+" 글리프 전용 */
+
+  /* === 신규 propose 토큰: alert 텍스트색 라이트 오버라이드 (tokens.md §B — refine R3 B항) ===
+     다크 기본값은 :root 에 선언. 라이트 오버라이드는 [data-theme="light"] 블록에 등재.
+     다크 기본: warning=#F59E0B / error+network=#F87171(--data-up-text) / info=#3B82F6 */
+  --color-alert-warning-text: #F59E0B;   /* 다크 기본 — amber (warning tint bg 위) */
+  --color-alert-error-text: var(--data-up-text); /* 다크 기본 — F87171 (error tint bg 위) */
+  --color-alert-info-text: var(--color-sapphire); /* 다크 기본 — sapphire */
+
+  /* === 신규 propose 토큰: space (tokens.md §B) === */
+  --space-panel-x: 12px;
+  --space-row-y-compact: 6px;
+  --space-header-y: 8px;
+  --space-action-y: 12px;
+
+  /* === 신규 propose 토큰: alpha-tints (tokens.md §B) === */
+  --color-sapphire-tint-10: rgba(59,130,246,0.10);
+  --color-skeleton-base: rgba(255,255,255,0.06);
+  --color-skeleton-highlight: rgba(255,255,255,0.12);
+  --color-midnight-alpha-30: rgba(11,23,41,0.30);
+  --color-badge-warning-tint-10: rgba(245,158,11,0.10);
+  --color-data-up-tint-10: rgba(220,38,38,0.10);
+
+  /* === 신규 propose 토큰: gem (tokens.md §B — 로고 전용) === */
+  --gem-highlight: #7DB7FB;   /* TL — 빛 직접 수광 */
+  --gem-base: #3B82F6;        /* TR — 브랜드 기준색 */
+  --gem-mid-dark: #2563EB;    /* BL — Mid-dark */
+  --gem-shadow: #1E40AF;      /* BR — 그림자 면 */
+
+  /* === 신규 propose 토큰: gem-mono (tokens.md §B — 메뉴바 아이콘 전용, 오너 정제 3) ===
+     hue 0 모노크롬 4면: 라이팅 좌상단 유지. 그라데이션·외곽선·글로우 금지.
+     macOS template image 방식 (라이트 메뉴바에서 자동 반전됨 — Swift에서 처리) */
+  --gem-mono-tl: #FFFFFF;     /* TL — 최명 (직접 수광) */
+  --gem-mono-tr: #E0E0E0;     /* TR — 밝은 회색 */
+  --gem-mono-bl: #B8B8B8;     /* BL — 중간 회색 */
+  --gem-mono-br: #8A8A8A;     /* BR — 최암 (그림자 면) */
+
+  /* === 신규 propose 토큰: 등락 2단 폰트 크기 (tokens.md §B — refine R2) === */
+  /* 오너 정제 R2 지시 3·4: 등락률 12px / 등락액 10px (위계 재도입) */
+  --font-size-change-unified: 12px;
+  --font-size-change-amt: 10px;
+
+  /* === 다크 모드 (default) 색 별칭 === */
+  --bg-app: var(--color-midnight);
+  --bg-panel: var(--color-surface-1);
+  --bg-hover: var(--color-surface-2);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --border: var(--color-border);
+  --border-muted: var(--color-border-muted);
+  --data-up-display: var(--data-up-text);
+  --data-down-display: var(--data-down-text);
+  --data-neutral-display: var(--data-neutral-text);
+  /* 워드마크 글자색 — 다크: Pearl 톤 */
+  --wordmark-text: #F5F5F0;
+  /* 헤더 배경 — 다크: surface-1 (panel과 동일) */
+  --bg-header: var(--color-surface-1);
+  /* Primary 버튼 — 다크: sapphire bg */
+  --btn-primary-bg: var(--color-sapphire);
+  --btn-primary-color: var(--color-midnight);
+}
+
+/* === SECTION: light-mode ===
+   PARAGON-design-plan §9.5 라이트 모드 팔레트 (오너 오버라이드 5)
+   [data-theme="light"] 속성 방식 — prefers-color-scheme 미디어쿼리 폐기
+   표면 위계: panel=Surface(#FFF) / 헤더=Sunken(#EFEEE8) / 입력창=Sunken */
+[data-theme="light"] {
+  /* Surfaces §9.1 */
+  --bg-app: #F8F7F2;           /* Canvas */
+  --bg-panel: #FFFFFF;         /* Surface — 카드·패널 */
+  /* ★ hover-bg 중립 override (refine R3 C항):
+     §9.3 accent-tint #EAF1FE는 "선택" 상태 전용.
+     hover는 데이터색(up#DC2626/down#2563EB/neutral#64748B) AA 통과 중립색 필요.
+     #EAF1FE: up 4.26:1 FAIL → #FAFAFA: up 4.63 / down 4.95 / neutral 4.56 ALL PASS.
+     WCAG AA 우선 — tokens.md §C deviation 사유 등재. */
+  --bg-hover: #FAFAFA;         /* 중립 hover — 데이터색 AA 통과 (accent-tint 대비 대체) */
+  --bg-header: #EFEEE8;        /* Sunken — 헤더 영역 */
+
+  /* Text §9.2 */
+  --text-primary: #0B1729;     /* Primary */
+  --text-secondary: #475569;   /* Secondary */
+  --wordmark-text: #0B1729;    /* Midnight — 라이트 워드마크 글자 (§4.2) */
+
+  /* Border */
+  --border: #D6D3C8;           /* Border strong */
+  --border-muted: #E7E5DC;     /* Divider */
+
+  /* Data — 라이트 §9.4 */
+  --data-up-display: #DC2626;
+  --data-down-display: #2563EB;
+  --data-neutral-display: #64748B;
+  /* 접근성 텍스트 변형 오버라이드 — 라이트 Surface 위 */
+  --data-up-text: #DC2626;
+  --data-down-text: #2563EB;
+  --data-neutral-text: #64748B;
+
+  /* Accent §9.3 */
+  --color-sapphire: #3B82F6;
+
+  /* Primary 버튼 — Midnight bg + 흰 텍스트 (§9.3) */
+  --btn-primary-bg: #0B1729;
+  --btn-primary-color: #FFFFFF;
+
+  /* 스켈레톤 오버라이드 (라이트 모드) */
+  --color-skeleton-base: rgba(0,0,0,0.06);
+  --color-skeleton-highlight: rgba(0,0,0,0.10);
+
+  /* highlight tint — 라이트도 동일 (데이터 색 동일이므로) */
+  --color-highlight-up: rgba(220,38,38,0.12);
+  --color-highlight-down: rgba(37,99,235,0.12);
+
+  /* ★ alert 텍스트색 라이트 오버라이드 (refine R3 B항 — WCAG AA 적용):
+     다크 기본값이 라이트 tint 배경 위에서 대비 미달.
+     warning: #F59E0B 1.99:1 FAIL → #92400E 6.56:1 PASS (amber-900, FEF5E7 tint 위)
+     error:   #DC2626 4.13:1 FAIL → #991B1B 7.11:1 PASS (red-800, FCE9E9 tint 위)
+     info:    #3B82F6 3.27:1 FAIL → #1D4ED8 5.96:1 PASS (blue-700, EBF2FE tint 위)
+     network-error: error 동일 tint bg → #991B1B 7.11:1 PASS
+     데이터 부호색 절대 불변 — alert 영역 텍스트만 진하게 처리. */
+  --color-alert-warning-text: #92400E;   /* amber-900 — warning tint #FEF5E7 위 6.56:1 */
+  --color-alert-error-text: #991B1B;     /* red-800   — error   tint #FCE9E9 위 7.11:1 */
+  --color-alert-info-text: #1D4ED8;      /* blue-700  — info    tint #EBF2FE 위 5.96:1 */
+}
+
+/* === SECTION: reduced-motion ===
+   Plan §5.6 — animation-recipes prefers-reduced-motion 체크리스트 인용 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === SECTION: reset-base === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+}
+
+/* === SECTION: demo-chrome ===
+   데모 전용 외부 래퍼 — 실제 SwiftUI 팝오버에서는 불필요 */
+.demo-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 64px;
+  gap: 24px;
+  background: var(--bg-app);
+}
+
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: 580px;
+}
+
+.demo-label {
+  font-size: var(--font-size-t5);
+  color: var(--text-secondary);
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.demo-btn {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t5);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+
+.demo-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.demo-btn.active {
+  background: var(--color-sapphire);
+  color: var(--color-midnight);
+  border-color: var(--color-sapphire);
+}
+
+/* === SECTION: panel-frame ===
+   320pt 팝오버 패널 — macOS NSPopover 시각 잠금 */
+.panel {
+  width: 320px;
+  min-height: 240px;
+  max-height: 520px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-panel);
+}
+
+/* === SECTION: header ===
+   Z1 — sticky 헤더. 오너 정제 2: 1줄 레이아웃 (2줄 → 1줄 통합)
+   좌→우: 워드마크 · 장상태+시각 "기준" · 배지슬롯 · + 버튼
+   라이트: Sunken 배경 (--bg-header) */
+.panel-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-header-y) var(--space-panel-x);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+/* 헤더 단일 행: 워드마크(좌) · 상태텍스트(중) · 배지·+버튼(우) */
+.header-row-single {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* === SECTION: wordmark ===
+   PARAGON 워드마크 — P◇RAGON (◇ = 보석 마크)
+   §2.1 모노스페이스 그리드, weight 500, 전체 대문자
+   브랜드존: 데이터색 등장 금지 (§3.3) */
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--font-size-t2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--wordmark-text);
+  line-height: 1;
+  user-select: none;
+}
+
+.wordmark-letter {
+  display: inline-block;
+  /* 균등 셀 폭 — §2.1 모노스페이스 그리드 */
+  min-width: 11px;
+  text-align: center;
+}
+
+/* 보석 마크 셀 — 워드마크 2번째 셀 (첫 번째 A 위치) */
+.wordmark-gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 보석 비율 4:5 (가로:세로) — §2.2 */
+  width: 10px;
+  height: 14px;
+  position: relative;
+  vertical-align: middle;
+}
+
+/* === SECTION: gem-svg ===
+   4면 패싯 보석 — clip-path / conic 없이 4 삼각형 CSS
+   TL #7DB7FB / TR #3B82F6 / BL #2563EB / BR #1E40AF
+   그라데이션·외곽선·그림자·글로우 금지 (§2.2 Don't) */
+.gem {
+  /* 보석 단독 사용 시 크기 설정 — 워드마크 내부는 .wordmark-gem이 제어 */
+  position: relative;
+  display: inline-block;
+}
+
+/* 보석 SVG inline — 4 삼각형 polygon
+   10×14 viewport. 중심점 (5,7).
+   TL: (0,0)-(10,0)-(5,7)
+   TR: (10,0)-(10,14)-(5,7)  [실제: 우상 면이므로 (5,0)-(10,7)-(5,7)로 분할 — 마름모 4분할]
+   마름모 꼭짓점: top(5,0) right(10,7) bottom(5,14) left(0,7)
+   TL면: top(5,0)-left(0,7)-center(5,7)
+   TR면: top(5,0)-right(10,7)-center(5,7)
+   BL면: left(0,7)-bottom(5,14)-center(5,7)
+   BR면: right(10,7)-bottom(5,14)-center(5,7) */
+
+/* === SECTION: header-meta ===
+   오너 정제 2: 1줄 통합 헤더 — 상태+시각 단일 텍스트
+   예: "장중 14:23:05 기준" / "장마감 종가 기준"
+   브랜드존 규칙 유지: 데이터색 미사용 */
+
+/* flex spacer — 워드마크와 우측 그룹 사이 공간 확보 (오너 정제 R2 지시 5) */
+.header-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 통합 상태 텍스트 (장상태 + 시각 + "기준" 1 span)
+   오너 정제 R2 지시 5: "+" 바로 왼쪽 우측그룹으로 이동.
+   글씨 크기 1px 축소: t5(11px) → 10px (--font-size-status 전용토큰, E항) */
+.header-status-text {
+  font-size: var(--font-size-status);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 헤더 우측 아이콘 그룹 */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* 헤더 우측 그룹 — 상태텍스트 + 배지슬롯 + "+" 버튼 묶음 (오너 정제 R2 지시 5) */
+.header-right-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* compact "+": 헤더 Z1 우측 아이콘 (Plan §4.3, 오버라이드 1 계승)
+   오너 정제 R2 지시 7: "+" 글리프 가로·세로 정확히 중앙 정렬 */
+.btn-add-header {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--color-sapphire);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-icon-plus); /* --font-size-icon-plus=16px "+" 글리프 전용, E항 */
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  user-select: none;
+  transition: background 0.12s ease;
+}
+
+.btn-add-header:hover {
+  background: var(--bg-hover);
+}
+
+.btn-add-header:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* 상태 배지 */
+.status-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-status); /* --font-size-status=10px 전용토큰, E항 */
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.status-badge.warning {
+  background: var(--color-badge-warning);
+  color: var(--color-midnight);
+}
+
+.status-badge.error {
+  background: var(--color-badge-error);
+  color: var(--color-pearl);
+}
+
+/* spinner (token-refreshing) */
+.status-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--color-sapphire);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 헤더 인라인 경고 (ws-disconnected / auth-failed) */
+.header-alert {
+  width: 100%;
+  padding: 5px var(--space-panel-x);
+  font-size: var(--font-size-t5);
+  border-bottom: 1px solid var(--border-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-alert.warning {
+  background: var(--color-badge-warning-tint-10);
+  color: var(--color-alert-warning-text);
+}
+
+.header-alert.info {
+  background: var(--color-sapphire-tint-10);
+  color: var(--color-alert-info-text);
+}
+
+.header-alert.error {
+  background: var(--color-data-up-tint-10);
+  color: var(--color-alert-error-text);
+}
+
+.header-alert.network-error {
+  background: var(--color-data-up-tint-10);
+  color: var(--color-alert-error-text);
+  justify-content: space-between;
+}
+
+.network-error-msg {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-network-retry {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t5);
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-alert-error-text);
+  background: transparent;
+  color: var(--color-alert-error-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.btn-network-retry:hover {
+  background: var(--color-alert-error-text);
+  color: var(--bg-panel);
+}
+
+.btn-network-retry:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* === SECTION: view-body ===
+   Z2 — 뷰 콘텐츠 영역. 뷰 전환: opacity 0.18s (Plan §5.3) */
+.view {
+  display: none;
+  opacity: 0;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.view.active {
+  display: flex;
+  animation: fadeIn var(--motion-tab-duration) ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* === SECTION: empty-state ===
+   W1 — 빈 상태 (Plan §4.2 EmptyState) */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px var(--space-panel-x);
+  text-align: center;
+}
+
+.empty-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 보석 마크 컨테이너로 사용 시 라인 높이 정합 */
+  line-height: 0;
+}
+
+.empty-message {
+  font-size: var(--font-size-t3);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.btn-empty-cta {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: none;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.btn-empty-cta:hover {
+  opacity: 0.88;
+}
+
+.btn-empty-cta:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+/* === SECTION: symbol-list ===
+   W2 Z2 — 종목 행 목록 (내부 스크롤) */
+.symbol-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.symbol-list::-webkit-scrollbar {
+  width: 4px;
+}
+.symbol-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.symbol-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* === SECTION: symbol-row ===
+   W2 Z2 — 단일 종목 행
+   오너 오버라이드 4: .row-change를 2단 수직 스택으로 개편
+   오너 정제 final: height 32px 고정 → min-height 제거 + content-driven height.
+   등락 스택 4px pad + 12px×1.2 + 2px gap + 10px×1.2 + 4px pad ≈ 37px.
+   행 자체 padding (--space-row-y-compact=6px 상하) 포함 → 자연 높이 ≈ 49px.
+   align-items: center 유지 → 종목명·현재가 세로 중앙 정렬. */
+.symbol-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--space-row-y-compact) var(--space-panel-x);
+  border-bottom: 1px solid var(--border-muted);
+  gap: 6px;
+  cursor: default;
+  transition: background var(--motion-tab-duration) ease;
+}
+
+.symbol-row:hover {
+  background: var(--bg-hover);
+}
+
+.symbol-row:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: -2px;
+}
+
+.symbol-row:last-child {
+  border-bottom: none;
+}
+
+/* 장외 행 (Plan §3.4 OQ-3 확정 75%) */
+.symbol-row.market-closed {
+  opacity: 0.75;
+}
+
+/* 실시간 갱신 하이라이트 (Plan §5.1 핵심 모션)
+   animation-recipes §3 호버 마이크로인터랙션 응용 */
+.symbol-row.highlight-up {
+  background: var(--color-highlight-up);
+  transition: background var(--motion-highlight-duration) var(--motion-highlight-ease);
+}
+
+.symbol-row.highlight-down {
+  background: var(--color-highlight-down);
+  transition: background var(--motion-highlight-duration) var(--motion-highlight-ease);
+}
+
+/* 종목명 (좌측) */
+.row-name {
+  font-size: var(--font-size-t3);
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 종가 배지 (장외) */
+.badge-closing {
+  font-size: var(--font-size-t5);
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-muted);
+  border-radius: 3px;
+  padding: 1px 4px;
+  flex-shrink: 0;
+}
+
+/* 수치 그룹 (우측 정렬) */
+.row-data {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: var(--font-size-t4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 현재가 — 오너 오버라이드 3: 등락 방향 색 적용
+   (Plan §4.3 "compact 현재가 중립" 오버라이드 — 오너 승인)
+   .up / .down / .neutral 클래스로 색 제어 */
+.row-price {
+  font-weight: 400;
+  min-width: 52px;
+  text-align: right;
+}
+
+.row-price.up      { color: var(--data-up-display); }
+.row-price.down    { color: var(--data-down-display); }
+.row-price.neutral { color: var(--text-primary); }
+
+/* 등락 열 — 오너 오버라이드 4: 2단 수직 스택
+   오너 정제 R2 지시 1·2·3·4:
+     두 줄 gap 2px
+     1단(위): 등락률 % (--font-size-change-unified=12px)
+     2단(아래): ▲▼- + 등락액 (--font-size-change-amt=10px)
+   오너 정제 final: 상하 padding 2px → 4px (요구 사항)
+     스택 총 높이 = 4(pad) + ⌈12×1.2⌉(≈15) + 2(gap) + ⌈10×1.2⌉(12) + 4(pad) ≈ 37px
+     .symbol-row height 고정 제거로 행이 이 높이를 클리핑 없이 수용.
+   우측 정렬, 등락색
+   3중 인코딩(색+부호(%의-)+심볼(▼)) 유지 */
+.row-change {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  min-width: 72px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.row-change.up      { color: var(--data-up-display); }
+.row-change.down    { color: var(--data-down-display); }
+.row-change.neutral { color: var(--data-neutral-display); }
+
+/* 1단: 등락률 — 오너 정제 R2 지시 3: 12px (--font-size-change-unified) */
+.change-pct {
+  font-size: var(--font-size-change-unified);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 2단: 방향심볼 + 등락액 — 오너 정제 R2 지시 4: 10px (--font-size-change-amt)
+   ★ opacity 제거 (refine R3 A항): 등락액 10px vs 등락률 12px 폰트크기 위계로 충분.
+   opacity 0.85는 surface-2(hover) 위 up #F87171 → 4.07:1 FAIL의 근원.
+   제거 후: surface-1=5.79:1 / surface-2=5.17:1 ALL PASS. */
+.change-amt-line {
+  font-size: var(--font-size-change-amt);
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 삭제 아이콘 — 오너 정제 R2 지시 6: 비겹침 구현
+   flow 배치로 전환 (absolute 제거). 너비 0 → hover 시 20px 확장.
+   width·overflow hidden으로 공간 점유 제어 — 등락 데이터 비가림 보장.
+   transition: width 0.15s ease, opacity 0.15s ease (Plan §5.5 정합)
+   animation-recipes §3 호버 마이크로인터랙션 응용 */
+.btn-delete-row {
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-t3); /* 13px — 토큰 치환 E항 */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.15s ease, opacity 0.15s ease, color 0.12s ease;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.symbol-row:hover .btn-delete-row,
+.symbol-row:focus-within .btn-delete-row {
+  width: 20px;
+  opacity: 1;
+}
+
+.btn-delete-row:hover {
+  color: var(--data-up-text);
+}
+
+.btn-delete-row:focus-visible {
+  width: 20px;
+  opacity: 1;
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 1px;
+}
+
+/* === SECTION: skeleton ===
+   W2 loading 상태 — animation-recipes §8 shimmer 패턴
+   Plan §5.2 인용: period 1.6s (Paragon --motion-skeleton-period 상속)
+   오너 정제 final: height 32px 고정 제거 → .symbol-row와 동일 content-driven height.
+   loading↔normal 전환 시 행 높이 점프 없음. */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  padding: var(--space-row-y-compact) var(--space-panel-x);
+  border-bottom: 1px solid var(--border-muted);
+  gap: 8px;
+}
+
+.skeleton-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-block {
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton-base) 25%,
+    var(--color-skeleton-highlight) 50%,
+    var(--color-skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--motion-skeleton-period) infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-name   { flex: 1; height: 11px; }
+.skeleton-price  { width: 52px; height: 11px; }
+.skeleton-change { width: 64px; height: 37px; }  /* 2단 스택 실제 높이: 4+15+2+12+4=37px (padding 4px 반영) */
+
+/* === SECTION: add-form ===
+   W3 — 종목 등록 폼 (Plan §4.2 AddSymbolForm)
+   라이트: 입력창 = Sunken(--bg-header) */
+.add-form-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px var(--space-panel-x);
+  gap: 12px;
+}
+
+.add-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.add-form-label {
+  font-size: var(--font-size-t5);
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.add-form-input {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-variant-numeric: tabular-nums;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-header);  /* 라이트: Sunken / 다크: surface-1 */
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.12s ease;
+  width: 100%;
+}
+
+.add-form-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.add-form-input:focus {
+  border-color: var(--color-sapphire);
+}
+
+.add-form-input.has-error {
+  border-color: var(--data-up);
+}
+
+.add-form-error {
+  font-size: var(--font-size-t5);
+  color: var(--data-up-text);
+  display: none;
+  line-height: 1.4;
+}
+
+.add-form-error.visible {
+  display: block;
+}
+
+.add-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-submit {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 500;
+  padding: 7px 0;
+  flex: 1;
+  border-radius: 6px;
+  border: none;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.btn-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-submit:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+.btn-cancel {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t3);
+  font-weight: 400;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.btn-cancel:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-cancel:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 2px;
+}
+
+.btn-submit-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-midnight-alpha-30);
+  border-top-color: var(--color-midnight);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+
+.btn-submit.loading .btn-spinner {
+  display: block;
+}
+
+/* === SECTION: toast ===
+   삭제 토스트 — slide-up 0.22s, 3s 자동 소멸 (Plan §5.4, animation-recipes §8) */
+.toast-slot {
+  position: absolute;
+  bottom: 12px;
+  left: var(--space-panel-x);
+  right: var(--space-panel-x);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: var(--font-size-t4);
+  pointer-events: auto;
+  animation: toastIn var(--motion-toast-duration) ease-out forwards;
+  box-shadow: var(--shadow-toast);
+}
+
+/* 라이트 모드 토스트 배경 */
+[data-theme="light"] .toast {
+  background: var(--bg-panel);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.toast.hiding {
+  animation: toastOut var(--motion-toast-duration) ease-in forwards;
+}
+
+@keyframes toastOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.toast-text {
+  color: var(--text-primary);
+}
+
+.btn-undo {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-t4);
+  font-weight: 500;
+  color: var(--color-sapphire);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 0 12px;
+  flex-shrink: 0;
+}
+
+.btn-undo:focus-visible {
+  outline: 2px solid var(--color-sapphire);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+/* === SECTION: menubar-strip ===
+   오너 정제 3: 데모 크롬 내 macOS 메뉴바 시뮬레이션 스트립
+   실제 NSStatusItem은 팝오버 패널 밖(OS 영역)이므로 목업 전용 표현.
+   어두운 바 위 백색 모노크롬 보석 — macOS dark menubar 맥락.
+   참고: template image이므로 실제 라이트 메뉴바에선 macOS가 자동 반전 처리. */
+.demo-menubar-strip {
+  width: 320px;
+  height: 24px;
+  background: #1C1C1E;   /* macOS dark menubar 배경 시뮬레이션 */
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 10px;
+  gap: 12px;
+}
+
+.demo-menubar-strip-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.04em;
+  flex: 1;
+  text-align: left;
+  user-select: none;
+}
+
+/* 메뉴바 아이콘 슬롯 — 모노크롬 보석 보유 */
+.menubar-icon-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  cursor: default;
+  border-radius: 4px;
+  /* 활성 클릭 시뮬레이션용 hover */
+  transition: background 0.12s ease;
+}
+
+.menubar-icon-slot:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* 메뉴바 시뮬레이션이 패널과 붙어 보이도록 래퍼 */
+.demo-menubar-panel-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
