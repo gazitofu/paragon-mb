@@ -24,7 +24,8 @@ targets:
       path: App/Info.plist
       properties:
         LSUIElement: true            # Dock 미표시 — 메뉴바 상주 (architecture.md §빌드 형식)
-        CFBundleDisplayName: PARAGON-MB
+        CFBundleDisplayName: PARAGON   # 사용자 노출 앱명 = PARAGON (PARAGON-MB는 프로젝트/번들ID명)
+        CFBundleName: PARAGON
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
     settings:
