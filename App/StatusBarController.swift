@@ -9,8 +9,10 @@ import SwiftUI
 final class StatusBarController {
     private let statusItem: NSStatusItem
     private let popover: NSPopover
+    private let viewModel: WatchlistViewModel   // 조립 루트 주입 — 렌더는 Phase D(PanelRootView)에서
 
-    init() {
+    init(viewModel: WatchlistViewModel) {
+        self.viewModel = viewModel
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         popover = NSPopover()
