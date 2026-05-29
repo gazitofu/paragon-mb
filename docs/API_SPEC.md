@@ -1,7 +1,23 @@
 # API Spec — PARAGON-MB
 
 > 갱신: 2026-05-28 (`/team-dev:architect-design`, 기능 `watchlist-realtime`).
-> **출처 등급 주의**: 아래 엔드포인트·필드·프로토콜 상세는 공식 포털 본문 미확보로 대부분 2차 출처(🟡) 또는 미확인(🔴)이다. 실제 필드명·경로·페이로드 형식은 **키 발급 후 실측 또는 공식 가이드로 확정**해야 한다. 본 문서의 미검증 항목은 등급 표기를 유지한다.
+> **출처 등급 주의**: 아래 엔드포인트·필드·프로토콜 상세는 공식 포털 본문 미확보로 대부분 2차 출처(🟡) 또는 미확인(🔴)이었다. **2026-05-29 실측으로 핵심 항목 확정** — 아래 §실측 확정이 SSOT이며 하단 🟡/🔴 추정 표를 갱신한다.
+
+## ✅ 실측 확정 (2026-05-29 PoC)
+
+키 발급 후 `tools/kiwoom-ws-poc.swift` + `tools/kiwoom-rest-lookup-poc.swift`로 실측. .NET 래퍼의 `mockapi.kiwoom.com`은 **outdated** — 정정.
+
+| 항목 | 실측 확정값 | 비고 |
+|---|---|---|
+| REST baseURL | 실전 `https://api.kiwoom.com` / 모의 `https://api.kiwoom.com:9443` | 모의 구분은 토큰에 내재 |
+| 토큰 발급 | `POST /oauth2/token` body `{grant_type:client_credentials, appkey, secretkey}` → `{token, expires_dt, return_code}` | `expires_dt` = KST `yyyyMMddHHmmss`, 24h |
+| WS | `wss://api.kiwoom.com:10000/api/dostk/websocket` (실전·모의 공통) | LOGIN→REG(`grp_no`/`refresh`/`data[item,type=0B]`)→PING echo→REAL |
+| WS 0B FID | 10 현재가(부호=방향·abs) / 11 전일대비(부호) / 12 등락률% / 13 누적거래량 / 15 체결량 / 16·17·18 시·고·저 / 20 체결시각 / 27·28 최우선 매도·매수호가 | 가격 **원 단위, 스케일 없음**(사용자 확인 2026-05-29) |
+| 종목조회 | `POST /api/dostk/stkinfo` header `api-id: ka10001` + `authorization: Bearer {token}`, body `{stk_cd}` | 응답 `stk_nm`·`cur_prc`(부호)·`base_pric`(전일종가)·`pred_pre`·`flu_rt`(%) |
+| **Premise #1** 표준 키 WS 체결 수신 | **✅ TRUE** — 005930 실시간 0B 수신 | 별도 신청·요금 없이 수신 확인 |
+| 부호·스케일 잠금 | `KiwoomQuoteParser`(parseRealtimeExecution·parseStockInfo) + `QuoteParsingTests` | price=abs · change 부호 보존 · prevClose=base_pric(REST) 또는 price−change(WS) |
+
+> ⏳ 미실측 잔여: Premise #2(모의환경 실시간), #3(슬롯 한도), WS 구독해제(REMOVE) 정확 동작 — 모의 토큰·다종목 구독 시 추가 확인.
 
 ## 외부 API
 - **키움 REST API** (openapi.kiwoom.com): OAuth 토큰 발급, 시세 조회, 계좌 잔고(보유종목·평가손익)
