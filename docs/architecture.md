@@ -1,5 +1,6 @@
 # Architecture — PARAGON-MB
 
+> 갱신: 2026-05-29 (`/team-dev:architect-design`, 기능 `holdings-pnl` 두 번째 슬라이스 — §보유종목 슬라이스 추가). 근거: `Vault/appdev/PARAGON-MB/prd/holdings-pnl/{proposal.md, design.md}` + `decisions/2026-05-29-holdings-pnl-display-policy.md`(결정 A 단순 평가손익식). 큰 변경(실계좌 잔고 인증 축 + 신규 도메인·store·계산 lib·뷰) 사전 갱신.
 > 갱신: 2026-05-28 (`/team-dev:architect-design`, 기능 `watchlist-realtime` 첫 슬라이스 기준).
 > 근거: `Vault/appdev/PARAGON-MB/prd/watchlist-realtime/{proposal.md, design.md}`. Approaches ② 하이브리드(WebSocket 채택, 슬롯 예산·멀티계좌 추상화는 이연) 사용자 확정.
 > 개정: 2026-05-28 — 메뉴바 셸을 SwiftUI `MenuBarExtra(.window)` → AppKit `NSStatusItem`+`NSPopover`(AppDelegate 혼합)로 변경(사용자 결정). 패널 UI는 `NSHostingController`로 SwiftUI 그대로 호스팅. App 레이어 셸 구현만 변경 — PMCore·데이터·인증·장상태 로직 불변. 참조: 사용자가 현재 사용하는 TokenEater(NSStatusItem+NSPopover 패턴) + Stats·Fantastical 등 프로덕션 메뉴바 앱 표준.
@@ -119,13 +120,37 @@ PARAGON-MB/
 
 첫 슬라이스에서 **두지 않는** 것(과설계 방지). 미래 슬라이스 진입 시 도입한다:
 
-| 항목 | 첫 슬라이스 결정 | 미래 도입 시점 |
+| 항목 | 첫 슬라이스 결정 | 갱신(holdings-pnl, 2026-05-29) |
 |---|---|---|
-| 구독 매니저(슬롯 예산기) | 도입 안 함. WS 클라이언트가 종목코드 set만 구독/해제 | 보유종목·지수 슬라이스 — 관심+보유+지수가 슬롯을 나눠 쓸 때 |
-| 모의/실계좌 전환 계층 | 도입 안 함. `KiwoomEnvironment`에 baseURL 상수 2개(mock/real)만 두고 빌드 시 mock 고정 | 보유종목 슬라이스(실계좌 잔고 인증 필요) |
-| 슬롯 예산 추상화 | `Policy.maxWatchlistCount` 상수 1개로만 표현 | 다종 슬롯 합산이 필요해질 때 |
+| 구독 매니저(슬롯 예산기) | 도입 안 함. WS 클라이언트가 종목코드 set만 구독/해제 | **합집합 set 채택**: `QuoteService`가 watchlist·holdings 코드를 분리 보관하고 `Set(watchlist)∪Set(holdings)`로 단일 진입점 구독. 중복 1회는 Set 연산이 자동 보장. **full ref-count는 여전히 v2 이연**(지수·예수금 진입 시) |
+| 모의/실계좌 전환 계층 | 도입 안 함. `KiwoomEnvironment`에 baseURL 상수 2개(mock/real)만 두고 빌드 시 mock 고정 | **전환 계층 신설 안 함 유지**. 실계좌 구분은 토큰에 내재. 모의 토큰 잔고 가드는 `HoldingsViewModel`에 명시(Floor 4 — config 숨김 금지) |
+| 슬롯 예산 추상화 | `Policy.maxWatchlistCount` 상수 1개로만 표현 | `Policy.totalSlotBudget`(관심+보유 합집합) 상수 추가. 다종 슬롯 합산 추상화는 여전히 v2 |
 
 **경계 원칙**: WS 클라이언트는 "종목코드 집합을 구독한다"는 단순 계약만 노출한다. 미래에 슬롯 예산기를 끼워도 이 계약(구독/해제)은 바뀌지 않도록 한다. `KiwoomEnvironment`는 mock/real을 enum으로 갖되 전환 로직(잔고 인증 경로 분기)은 두지 않는다 — 상수만.
+
+## 보유종목 슬라이스 (holdings-pnl, 2026-05-29 — 큰 변경 사전 갱신)
+
+두 번째 슬라이스. 실계좌 잔고 인증 축을 추가하고, 저빈도 REST 잔고 스냅샷과 고빈도 WS 현재가를 결합해 **단순 평가손익(결정 A)**을 실시간 산출한다. 첫 슬라이스 `QuoteService`·`KiwoomWebSocketClient`·`TokenManager`·`PriceDirection`·`DesignTokens`를 계승하고, 위험 표면(손익 산식·부호·스케일)에만 순수 계산 lib + 테스트 잠금을 집중 투입한다.
+
+### 신규 컴포넌트
+
+- **HoldingPnL** (`Domain/`, 순수 lib — 손익 산식 단일 출처): 종목별 `평가손익액 = qty×(cur−pur)`·평가금액·수익률, 합산은 **Σ개별로만** 계산(별도 산식 금지 → 헤더=개별 합 보장). 원 단위 `Int` 정수 연산, 수익률만 `Double`. 결정 A 잠금 — 키움 `evltv_prft`(수수료+세금 차감)와 의도적으로 다름. `BalancePnLTests`가 부호·스케일·반올림·Σ일치·0 분모 게이트.
+- **SymbolCode** (`Domain/`, 순수): `normalize6()` 종목코드 정규화 단일 함수. 잔고 `stk_cd` "A085620" → "085620"(WS 6자리와 통일). 보유↔관심 구독 공유·동일 코드 비교가 모두 이 함수를 통과(분산 금지). `SymbolCodeTests` 잠금.
+- **Holding** (`Domain/Types`): 보유 종목 모델(code·name·qty·purchasePrice·purchaseAmount). 시세 비포함·**디스크 영속 안 함**(잔고 REST 재조회로 복원 — watchlist JSON과 대비).
+- **KiwoomBalanceParser** (`Network/`, 격리 파서): kt00018 JSON → `[Holding]`. `stk_cd·stk_nm·rmnd_qty·pur_pric·pur_amt·cur_prc`만 추출, `evltv_prft·sum_cmsn·tax·prft_rt` 미추출(결정 A). `KiwoomBalanceParserTests` 잠금.
+- **HoldingsViewModel** (`App/ViewModels/`, @MainActor): 보유 화면 상태 단일 소유자(loading/live/offline/empty/error). 잔고 폴링(`Policy.balancePollInterval`)·QuoteService 스트림 구독·손익 재계산·모의/실계좌 가드(명시 배치). watchlist와 분리.
+- **HoldingsView / HoldingsSummaryHeader / HoldingsRowView / PanelTabBar** (`App/Views/`): 보유 탭 콘텐츠·합산 헤더·2단 스택 행·보유/관심 세그먼트 탭. UI는 ViewModel `@Published`만 렌더(네트워크 직접 호출 금지).
+
+### 변경 컴포넌트
+
+- **QuoteService**: watchlist·holdings 코드 분리 보관 + `updateHoldings(_:)` 추가. WS 구독은 항상 `Set(watchlist)∪Set(holdings)` 합집합으로 `setSubscriptions` 전달(단일 진입점 — 직접 `ws.setSubscriptions` 호출 금지). watchlist 갱신이 holdings 구독을 덮어쓰지 않음. `QuoteServicing` 프로토콜에 `updateHoldings` 추가(`WatchlistViewModel` 호출처 무영향 — 외부 시그니처 불변).
+- **KiwoomRESTClient**: `fetchBalance(token:)` 추가(POST /api/dostk/acnt, api-id kt00018). 기존 `lookup`·`issueToken` 불변.
+- **PanelRootView**: 탭 축·양 ViewModel 라우팅. 기존 watchlist 3분기(add/empty/list)는 관심 탭 내부로 이동(동작 불변). 생성 호출처(`StatusBarController`/`AppDelegate`)가 `holdingsViewModel` 추가 주입.
+- **Policy**: `balancePollInterval`(60s 기본)·`totalSlotBudget` 상수 추가.
+
+### 데이터 결합 흐름
+
+보유 구성(코드·수량·평단·매입금액)은 저빈도 REST 잔고(폴링), 현재가는 고빈도 WS(`QuoteService.updates` 공유 스트림). `HoldingsViewModel`이 두 소스를 `HoldingPnL`에 넣어 매 틱 재계산. 잔고 응답의 `cur_prc`는 WS 도착 전 초기 현재가로만 사용(이후 WS 우선). 장 외에는 WS off·마지막 종가 유지(첫 슬라이스 장상태 규칙 계승).
 
 ## 관심종목 한도 정책 (수치 하드의존 금지)
 

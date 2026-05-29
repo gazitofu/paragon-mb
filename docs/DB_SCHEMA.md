@@ -39,6 +39,21 @@
 - **시세 값(현재가·등락액·등락률·기준종가)은 영속하지 않는다** — 휘발성 런타임 상태(REST 초기값 + WS 갱신)로만 보유. 재실행 시 코드로 재조회. 영속 대상은 종목코드+이름+순서뿐.
 - `name`은 등록 시 캐시이며 SSOT가 아니다. 재조회 시 최신값으로 갱신 가능(향후).
 
+## 보유종목 스냅샷 — 휘발성(영속 안 함, holdings-pnl 2026-05-29)
+
+보유종목은 **디스크 영속 대상이 아니다**(watchlist JSON과 대비). 실계좌가 SSOT이며, 앱은 키움 잔고 REST(kt00018)를 주기 조회해 런타임 메모리에만 보유한다. 재실행 시 잔고 재조회로 복원.
+
+| 모델 | 필드 | 출처 | 비고 |
+|---|---|---|---|
+| `Holding`(PMCore/Domain) | `code`(정규형 6자리) | 잔고 `stk_cd` → `SymbolCode.normalize6` | "A" 접두 제거 |
+| | `name` | 잔고 `stk_nm` | |
+| | `quantity`(주, Int) | 잔고 `rmnd_qty` | |
+| | `purchasePrice`(원, Int) | 잔고 `pur_pric` | 매입단가(표시용 반올림) — 종목별 손익 계산 기준 |
+| | `purchaseAmount`(원, Int) | 잔고 `pur_amt` | authoritative — 수익률 분모·합산 기준선(역산 금지, Premise #5) |
+
+- 현재가(`cur_prc`)는 `Holding`에 넣지 않는다 — WS 가격 캐시(`HoldingsViewModel.quotes`) 경유(잔고 `cur_prc`는 WS 도착 전 초기값으로만).
+- 키움 `evltv_prft·sum_cmsn·tax·prft_rt`는 저장·사용하지 않는다(결정 A — 단순식 자체 계산).
+
 ## 자격증명 — macOS Keychain
 
 | 항목 | 값 |

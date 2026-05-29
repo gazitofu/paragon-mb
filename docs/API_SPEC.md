@@ -71,6 +71,13 @@
 - **보유종목 평가손익 표시 정책 (holdings-pnl) — ✅ 결정 A (2026-05-29, `Vault/.../decisions/2026-05-29-holdings-pnl-display-policy.md`)**: **단순 평가손익(실시간)** `rmnd_qty × (cur_prc − pur_pric)`(=`evlt_amt − pur_amt`), 수익률 = 손익/`pur_amt`×100. WS 현재가로 실시간 재계산. "수수료·세금 미포함" 캡션 병기. 키움 `evltv_prft`·`sum_cmsn`·`tax`·`prft_rt`는 v1 미사용(의도적 MTS 불일치). `BalancePnLTests`로 단순식 잠금. (대안 B 스냅샷/C 실시간 추정은 v2 토글 후순위.)
 - **종목코드 정규화**: 잔고 `stk_cd`는 "A" 접두(`A085620`), WS/시세는 6자리(`005930`). 보유↔관심 중복 구독 공유(슬롯 1회) 위해 **정규화 6자리 키로 통일** 필요.
 
+### holdings-pnl 앱 측 호출 윤곽 (2026-05-29, architect-design)
+
+- **`KiwoomRESTClient.fetchBalance(token:)`** (신규): `POST /api/dostk/acnt`, header `api-id: kt00018` + `authorization: Bearer {실계좌 token}` + `cont-yn: N` + `next-key: ""`, body `{qry_tp, dmst_stex_tp:"KRX"}`. 파싱은 격리 파서 `KiwoomBalanceParser.parse(json) -> [Holding]` 위임(실측 키 확정 시 한 곳만 수정).
+- **v1 사용 필드 화이트리스트(결정 A)**: 종목별 `stk_cd`(→`SymbolCode.normalize6`)·`stk_nm`·`rmnd_qty`·`pur_pric`·`pur_amt`·`cur_prc`(WS 도착 전 초기값)만 사용. **미사용**: `evltv_prft`·`sum_cmsn`·`tax`·`prft_rt`·합산 `tot_*`(앱이 단순식으로 자체 계산·합산). 키움 합산값은 검증용 참고만, 표시 안 함.
+- **손익 산식(결정 A, `HoldingPnL` lib·`BalancePnLTests` 잠금)**: 종목별 `rmnd_qty×(cur_prc−pur_pric)`(원 Int), 수익률 `손익/pur_amt×100`(%), 합산은 Σ개별. 키움 `evltv_prft`와 수수료+세금만큼 의도적 불일치 — "수수료·세금 미포함" 캡션 병기.
+- **모의/실계좌 가드(R3)**: 모의 토큰 잔고 호출은 거부/빈 응답 → 보유 탭 "실계좌 필요" 안내. 정확한 모의 판별 필드는 sprint PoC calibration 대상.
+
 ## watchlist-realtime 연동 스펙 (2026-05-28, architect-design)
 
 > 아래는 본 기능 구현이 의존하는 호출 윤곽이다. 경로·필드명·페이로드 키는 2차 출처 추정이므로 **🟡/🔴 등급을 유지**한다. 실측 PoC에서 실제 값으로 교정한다.
