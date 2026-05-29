@@ -25,6 +25,14 @@ final class WatchlistViewModel: ObservableObject {
     @Published private(set) var lastUpdated: Date?            // 헤더 "마지막 갱신 시각"(체결 도착 시점)
     @Published private(set) var loadFailed = false            // 초기 REST 전체 실패 배너(M2) — 캐시값 유지
     @Published private(set) var addViewModel: AddSymbolViewModel?  // non-nil = V3 표시
+    @Published private(set) var undoToast: UndoToast?         // non-nil = 삭제 토스트 표시(M2 remove 행)
+
+    /// 삭제 직후 "삭제됨 · 되돌리기" 토스트의 복원 컨텍스트. id로 뷰의 자동 소멸 타이머를 키.
+    struct UndoToast: Equatable, Identifiable {
+        let id = UUID()
+        let symbol: Symbol
+        let index: Int
+    }
 
     // MARK: - 의존성 (K1 — 추상화만)
     private let store: WatchlistStore
@@ -139,17 +147,44 @@ final class WatchlistViewModel: ObservableObject {
         }
     }
 
-    /// 행 삭제 — 목록·구독에서 즉시 제거, 마지막 항목이면 V1 전환(M2 remove).
+    /// 행 삭제 — 목록·구독에서 즉시 제거, "삭제됨 · 되돌리기" 토스트 노출, 마지막 항목이면 V1 전환(M2 remove).
     func remove(_ symbol: Symbol) {
-        symbols.removeAll { $0.code == symbol.code }
+        guard let index = symbols.firstIndex(where: { $0.code == symbol.code }) else { return }
+        symbols.remove(at: index)
         quotes[symbol.code] = nil
         persist()
+        undoToast = UndoToast(symbol: symbol, index: index)
         if symbols.isEmpty {
             state = .empty
             Task { await service.stop() }
         } else {
             Task { await service.updateWatchlist(symbols.map(\.code)) }
         }
+    }
+
+    /// 토스트 "되돌리기" — 삭제 위치에 복원, 마지막 항목 복원 시 파이프라인 재기동(M2 remove 행).
+    func undoLastDelete() {
+        guard let toast = undoToast else { return }
+        let wasEmpty = symbols.isEmpty
+        symbols.insert(toast.symbol, at: min(toast.index, symbols.count))
+        persist()
+        undoToast = nil
+        if wasEmpty {
+            beginPipeline()
+        } else {
+            Task { await service.updateWatchlist(symbols.map(\.code)) }
+        }
+    }
+
+    func dismissUndoToast() {
+        undoToast = nil
+    }
+
+    /// 네트워크 배너 "다시 시도"(V13) — 캐시값 유지한 채 초기 로드 재시도.
+    func retry() {
+        guard !symbols.isEmpty else { return }
+        loadFailed = false
+        Task { await service.start(codes: symbols.map(\.code)) }
     }
 
     private func persist() {

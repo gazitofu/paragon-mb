@@ -3,13 +3,13 @@ import SwiftUI
 
 /// 메뉴바 셸(K9). `NSStatusItem` + `NSPopover`(`.transient`)를 소유하고
 /// 좌클릭=팝오버 토글 / 우클릭=컨텍스트 메뉴(설정·종료)로 분기한다.
-/// 팝오버 콘텐츠는 `NSHostingController`로 SwiftUI 패널을 호스팅한다.
-/// Phase B: 패널은 placeholder. 실 PanelRootView(task 23)는 Phase D에서 주입한다.
+/// 팝오버 콘텐츠는 `NSHostingController`로 SwiftUI 패널(PanelRootView)을 호스팅한다.
 @MainActor
 final class StatusBarController {
     private let statusItem: NSStatusItem
     private let popover: NSPopover
-    private let viewModel: WatchlistViewModel   // 조립 루트 주입 — 렌더는 Phase D(PanelRootView)에서
+    private let viewModel: WatchlistViewModel   // 조립 루트 주입
+    private var hasStarted = false              // 첫 팝오버 열림 시 1회 viewModel.start() 가드
 
     init(viewModel: WatchlistViewModel) {
         self.viewModel = viewModel
@@ -18,7 +18,7 @@ final class StatusBarController {
         popover = NSPopover()
         popover.behavior = .transient                                   // 바깥 클릭 시 자동 닫힘
         popover.contentSize = NSSize(width: 320, height: 360)           // 권장 폭 320pt (design §팝오버 크기)
-        popover.contentViewController = NSHostingController(rootView: PlaceholderPanelView())
+        popover.contentViewController = NSHostingController(rootView: PanelRootView(viewModel: viewModel))
 
         if let button = statusItem.button {
             let icon = Self.gemIcon()
@@ -75,6 +75,10 @@ final class StatusBarController {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            if !hasStarted {
+                hasStarted = true
+                viewModel.start()                  // 첫 열림 시 실시간 파이프라인 부트스트랩(P0)
+            }
             NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
@@ -102,22 +106,5 @@ final class StatusBarController {
 
     @objc private func quit() {
         NSApp.terminate(nil)
-    }
-}
-
-/// Phase B placeholder — 실 패널(PanelRootView, task 23)은 Phase D에서 교체.
-private struct PlaceholderPanelView: View {
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "diamond.fill")
-                .font(.title2)
-            Text("PARAGON")
-                .font(.headline)
-            Text("패널 준비 중")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
     }
 }
