@@ -7,6 +7,10 @@ xcuserdata/
 DerivedData/
 *.xcworkspace/xcuserdata/
 
+# XcodeGen 생성물 — project.yml이 SSOT. 클론 후 `xcodegen generate`로 재생성.
+*.xcodeproj/
+App/Info.plist
+
 # Swift Package Manager
 .build/
 .swiftpm/

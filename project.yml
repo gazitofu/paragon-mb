@@ -1,0 +1,51 @@
+name: PARAGON-MB
+# 앱 타깃 정의 SSOT — `xcodegen generate`로 PARAGON-MB.xcodeproj 결정적 생성.
+# PMCore(루트 Package.swift)는 로컬 SwiftPM 패키지로 의존. 런타임 외부 의존성 0.
+options:
+  bundleIdPrefix: kr.co.paragon
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+packages:
+  PMCore:
+    path: .
+
+targets:
+  PARAGON-MB:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    dependencies:
+      - package: PMCore
+        product: PMCore
+    info:
+      path: App/Info.plist
+      properties:
+        LSUIElement: true            # Dock 미표시 — 메뉴바 상주 (architecture.md §빌드 형식)
+        CFBundleDisplayName: PARAGON-MB
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: kr.co.paragon.paragon-mb
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Manual       # 로컬 ad-hoc 서명("Sign to Run Locally") — 개발팀 불요
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: NO
+        DEAD_CODE_STRIPPING: YES
+
+schemes:
+  PARAGON-MB:
+    build:
+      targets:
+        PARAGON-MB: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release
