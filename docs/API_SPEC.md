@@ -38,13 +38,38 @@
 | 실시간 시세 별도 요금 | 공개 출처에 별도 과금 언급 없음 (표준 키로 실시간 체결 수신 가능해 보임) | 추론 | 🔴 미확인 |
 | 모의 vs 실계좌 | 모의투자 환경 존재(`isMock`). 보유종목/평가손익은 **실계좌 필수**(모의=가짜 잔고) | .NET 래퍼 | 🟡 |
 
-### 보유종목 구현 경로 (계좌 엔드포인트 — 2차 출처 메서드명)
-- 예수금 / 추정자산 / **계좌평가잔고**(보유종목 평가) / 일별손익 → 보유 합산 평가손익 산출 가능.
+### 계좌평가잔고 (kt00018) — ✅ 실측 확정 (2026-05-29 PoC, `tools/kiwoom-balance-poc.swift`)
+
+- 호출: `POST /api/dostk/acnt` header `api-id: kt00018` + `authorization: Bearer {token}` + `cont-yn: N` + `next-key: ""`, body `{qry_tp, dmst_stex_tp:"KRX"}` (`qry_tp` 1=합산/2=개별 추정 — 합산으로 보유리스트+합산 모두 수신 확인). 실계좌 토큰으로 HTTP 200·`return_code:0`. 시세 구독과 **동일 토큰 흐름**(Premise #1·#2 ✅).
+- 응답 보유리스트 키 = `acnt_evlt_remn_indv_tot`(배열). 종목별 필드(전부 **zero-padded 문자열, 원/주 단위 정수, 스케일 없음**):
+
+  | 필드 | 의미 | 비고 |
+  |---|---|---|
+  | `stk_cd` | 종목코드 | **"A" 접두**(예 `A085620`) — WS/시세는 6자리(`005930`)라 **접두 제거 필요** |
+  | `stk_nm` | 종목명 | |
+  | `rmnd_qty` | 보유수량(주) | |
+  | `pur_pric` | 매입단가(평단, 원) | `pur_amt/rmnd_qty` 반올림(절사) — **역산 금지, 표시용만** |
+  | `pur_amt` | 매입금액(원) | **authoritative**(합산·손익 기준선) |
+  | `cur_prc` | 현재가(원) | |
+  | `evlt_amt` | 평가금액(원) | = `rmnd_qty × cur_prc` |
+  | `evltv_prft` | 평가손익(원) | = `evlt_amt − pur_amt − sum_cmsn − tax` (**수수료+세금 차감**, 부호 보존) |
+  | `prft_rt` | 수익률(%) | = `evltv_prft / pur_amt × 100`, plain decimal 문자열(예 `-1.97`) |
+  | `pur_cmsn`·`sell_cmsn`·`sum_cmsn` | 매수·(추정)매도·합산 수수료(원) | 매도분은 현재가 기준 추정 → 가격 변동 시 변함 |
+  | `tax` | (추정)제세금(원) | 매도 거래세 등, 현재가 기준 추정 |
+  | `pred_close_pric` | 전일종가(원) | |
+  | `poss_rt` | 보유비중(%) | |
+  | `trde_able_qty` | 매매가능수량 | |
+
+- 합산(top-level): `tot_evlt_amt`(총평가) / `tot_pur_amt`(총매입) / `tot_evlt_pl`(총평가손익) / `tot_prft_rt`(총수익률 %) / `prsm_dpst_aset_amt`(추정예탁자산). 합산은 종목별 합과 일치 실측 확인.
+
+> **⚠️ Premise #4·#5 핵심 발견 (손익 산식 불일치)**: PRD가 계획한 `보유수량 × (현재가 − 평단가)` = `evlt_amt − pur_amt`로, **키움 MTS 표기 `evltv_prft`와 수수료+세금만큼 어긋난다**(실측 3종목 전부 차액 = `sum_cmsn + tax`로 정확히 설명됨). 게다가 매도 수수료·세금은 **현재가 기준 추정치**라 WS로 현재가가 틱마다 변하면 정확 일치하려면 매도분 수수료·세금도 현재가 기준 재계산 필요. → **표시 정책 결정 필요**(아래 §제품/아키텍처 영향). `KiwoomBalanceParser` + `BalancePnLTests`로 잠금(Units & Signs).
 
 ### 제품/아키텍처 영향
 - **실시간 ~40슬롯 한도**: 관심 + 보유 + 지수(코스피·코스닥)가 모두 슬롯 소비 → 합산 ~40 예산. `product-define`에서 "관심종목 최대 N개" 정책 + 화면 가시 종목만 구독하는 lazy-subscribe 설계 검토.
 - **토큰 24h 자동 재발급** + 자격증명 Keychain 보관(평문 금지).
 - 개발 전략: 첫 슬라이스(관심종목 시세)는 **모의 환경**, 보유종목 단계에서 실계좌 연결.
+- **보유종목 평가손익 표시 정책 (holdings-pnl) — ✅ 결정 A (2026-05-29, `Vault/.../decisions/2026-05-29-holdings-pnl-display-policy.md`)**: **단순 평가손익(실시간)** `rmnd_qty × (cur_prc − pur_pric)`(=`evlt_amt − pur_amt`), 수익률 = 손익/`pur_amt`×100. WS 현재가로 실시간 재계산. "수수료·세금 미포함" 캡션 병기. 키움 `evltv_prft`·`sum_cmsn`·`tax`·`prft_rt`는 v1 미사용(의도적 MTS 불일치). `BalancePnLTests`로 단순식 잠금. (대안 B 스냅샷/C 실시간 추정은 v2 토글 후순위.)
+- **종목코드 정규화**: 잔고 `stk_cd`는 "A" 접두(`A085620`), WS/시세는 6자리(`005930`). 보유↔관심 중복 구독 공유(슬롯 1회) 위해 **정규화 6자리 키로 통일** 필요.
 
 ## watchlist-realtime 연동 스펙 (2026-05-28, architect-design)
 
