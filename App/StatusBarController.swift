@@ -10,6 +10,7 @@ final class StatusBarController {
     private let popover: NSPopover
     private let viewModel: WatchlistViewModel   // 조립 루트 주입
     private var hasStarted = false              // 첫 팝오버 열림 시 1회 viewModel.start() 가드
+    private let loginItem = LoginItemController()  // 로그인 시 자동 실행 토글(SMAppService)
 
     init(viewModel: WatchlistViewModel) {
         self.viewModel = viewModel
@@ -86,6 +87,15 @@ final class StatusBarController {
 
     private func showContextMenu() {
         let menu = NSMenu()
+
+        // 로그인 시 자동 실행 토글 — 매 표시 시 시스템 상태를 다시 읽어 체크마크 반영(SSOT 위임).
+        let launchItem = NSMenuItem(title: "로그인 시 자동 실행",
+                                    action: #selector(toggleLaunchAtLogin),
+                                    keyEquivalent: "")
+        launchItem.target = self
+        launchItem.state = loginItem.isEnabled ? .on : .off
+        menu.addItem(launchItem)
+
         menu.addItem(withTitle: "설정…", action: #selector(openSettings), keyEquivalent: ",").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "PARAGON 종료", action: #selector(quit), keyEquivalent: "q").target = self
@@ -102,6 +112,16 @@ final class StatusBarController {
             NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
         }
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func toggleLaunchAtLogin() {
+        let target = !loginItem.isEnabled
+        do {
+            try loginItem.setEnabled(target)
+        } catch {
+            // 실패 시 무음 로깅 — 체크마크는 다음 메뉴 표시 때 status 재조회로 거짓 ON을 방지.
+            NSLog("[PARAGON] 로그인 항목 \(target ? "등록" : "해제") 실패: \(error.localizedDescription)")
+        }
     }
 
     @objc private func quit() {
