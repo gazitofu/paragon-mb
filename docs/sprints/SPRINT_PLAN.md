@@ -20,17 +20,17 @@
 - 의존: 없음
 - 시도: 1
 - 산출물: Sources/PMCore/Network/NetworkPathReachability.swift (신규) · Tests/PMCoreTests/NetworkPathReachabilityTests.swift (신규)
-- 검증: V10 (T-NW1 최초 satisfied 콜백 0회 / T-NW2 unsatisfied→satisfied 1회), `swift test`
-- commit: (미정)
+- 검증: V10 (T-NW1 최초 satisfied 콜백 0회 / T-NW2 unsatisfied→satisfied 1회), `swift test` — PASS 34/34
+- commit: 18c432e (feat) + d54f1d2 (docs)
 
 ### Task 2: Xcode unit test 타겟 신설 (인프라 — 편차②)
 - 유형: implement
-- 상태: pending
+- 상태: done
 - 담당: developer
 - 의존: 없음
-- 시도: 1
+- 시도: 2
 - 산출물: project.yml (PARAGON-MBTests 타겟 + 스킴 test action) · Tests/AppTests/ 디렉토리 + 스모크 테스트 1건
-- 검증: `xcodegen generate` 성공 + `xcodebuild test -scheme PARAGON-MB` 스모크 PASS (새 테스트 파이프라인 동작 입증)
+- 검증: `xcodegen generate` 성공 + `xcodebuild test -scheme PARAGON-MB` 스모크 1/1 PASS (fresh DerivedData 캐시 우회 확인) — attempt 2 PASS (attempt 1: GENERATE_INFOPLIST_FILE 누락으로 FAIL)
 - commit: (미정)
 
 ### Task 3: WatchlistViewModel refresh 상태기계 (T2~T6)
