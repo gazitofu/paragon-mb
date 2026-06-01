@@ -39,13 +39,35 @@ targets:
         ENABLE_HARDENED_RUNTIME: NO
         DEAD_CODE_STRIPPING: YES
 
+  PARAGON-MBTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/AppTests
+    dependencies:
+      - target: PARAGON-MB
+    settings:
+      base:
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PARAGON-MB.app/Contents/MacOS/PARAGON-MB"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: NO
+        GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   PARAGON-MB:
     build:
       targets:
         PARAGON-MB: all
+        PARAGON-MBTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - PARAGON-MBTests
     profile:
       config: Release
     archive:
