@@ -11,6 +11,7 @@
   - ② `project.yml`에 Xcode unit test 타겟 `PARAGON-MBTests` 신설 (design.md affects 외 — 빌드 인프라). 실행 = `xcodebuild test -scheme PARAGON-MB`.
 - Phase 2 docs 갱신(표준): 마무리에서 architecture.md WatchlistViewModel refresh + NetworkPathReachability 컴포넌트 갱신 완료(2026-06-02). API_SPEC/DB_SCHEMA는 change_type=표준이라 영향 없음(SSOT 동기화 검증 통과).
 - 라이브/수동 검증 잔여: V11~V17 오너 Xcode 수동 게이트(자동 루프 밖, 장중 09:00–15:30 KST 일부 필요).
+- archived_to: Vault/archive/appdev/PARAGON-MB/prd/2026-06-02_refresh-recovery/ (2026-06-02, 사용자 게이트 승인)
 
 ## Tasks
 
@@ -65,7 +66,7 @@
 - 산출물: App/Views/MarketStatusHeader.swift (refreshButton 신규 + headerRow addButton 직전 삽입 + AlertBanner .authFailed 문구 변경) · docs/OPERATIONAL_NOTES.md (+1줄)
 - 내용: refreshButton(arrow.clockwise↔ProgressView, disabled(isRefreshing), ⌘R, 조건부 표시) · headerRow 삽입 · AlertBanner onRetry→refresh() · authFailed 문구 변경
 - 검증: BUILD SUCCEEDED + swift test 46/46 회귀 0 + xcodebuild test AppTests 11/11(fresh derivedDataPath 캐시 우회) 회귀 0. reviewer 치명 0(T7 7속성 7/7, 경계규칙 ⓐ 통과). qa PASS(V16 정적 검증 — EmptyState/isAdding 미렌더 로직). V11~V17 라이브 QA는 오너 Xcode 수동 게이트(자동 루프 밖)
-- commit: 1b3a46b (feat) + {docs SHA 마무리 후 기록}
+- commit: 1b3a46b (feat) + 7e0be7c (docs)
 
 ## 라이브/수동 검증 (코드 완료 후 오너 Xcode 게이트 — sprint 자동 루프 밖)
 - V11 authFailed→새로고침 버튼→재시작 없이 복귀 (수용 1)
