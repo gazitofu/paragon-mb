@@ -12,7 +12,7 @@ struct MarketStatusHeader: View {
         VStack(spacing: 0) {
             headerRow
             if !isAdding, let banner = activeBanner {
-                AlertBanner(kind: banner, onRetry: { viewModel.retry() })
+                AlertBanner(kind: banner, onRetry: { viewModel.refresh() })
             }
         }
         .background(PMColor.header)

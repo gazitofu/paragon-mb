@@ -19,6 +19,7 @@ final class WatchlistViewModel: ObservableObject {
 
     // MARK: - Published
     @Published private(set) var state: ScreenState = .loading
+    @Published private(set) var isRefreshing = false          // refresh 진행 직교 플래그(ScreenState와 독립)
     @Published private(set) var symbols: [Symbol] = []
     @Published private(set) var quotes: [String: Quote] = [:]
     @Published private(set) var marketStatus: MarketStatus = .closed
@@ -39,6 +40,7 @@ final class WatchlistViewModel: ObservableObject {
     private let service: QuoteServicing
     private let marketClock: MarketClock
     private let symbolLookup: @Sendable (String) async throws -> Symbol
+    private let reachability: NetworkReachability      // OS 네트워크 복구 감지 어댑터(mock 주입 가능)
 
     // MARK: - 내부 상태
     private var streamTask: Task<Void, Never>?
@@ -48,22 +50,30 @@ final class WatchlistViewModel: ObservableObject {
     init(store: WatchlistStore,
          service: QuoteServicing,
          marketClock: MarketClock = MarketClock(),
+         reachability: NetworkReachability = NetworkPathReachability(),
          symbolLookup: @escaping @Sendable (String) async throws -> Symbol) {
         self.store = store
         self.service = service
         self.marketClock = marketClock
+        self.reachability = reachability
         self.symbolLookup = symbolLookup
     }
 
     deinit {
         marketTimer?.invalidate()
         streamTask?.cancel()
+        reachability.stop()    // NWPathMonitor 정리 — VM이 생명주기 소유(design.md §③, reviewer 권장①)
     }
 
     // MARK: - 섹션 1: 초기 로드 · Store 연동 · V1/V2 라우팅 (M2 empty/loading)
 
     /// P0 진입점(Phase D 뷰 onAppear/첫 팝오버 열림에서 호출). 저장 0건=V1, 1+건=V2 로딩.
     func start() {
+        // NWPath 복구 콜백 1회 등록 — unsatisfied→satisfied 전이 시 refresh() 자동 호출(P2)
+        reachability.onRecovered { [weak self] in
+            Task { @MainActor in self?.refresh() }
+        }
+        reachability.start()
         symbols = store.load()
         guard !symbols.isEmpty else { state = .empty; return }   // V1
         beginPipeline()
@@ -100,19 +110,24 @@ final class WatchlistViewModel: ObservableObject {
             quotes[code] = quote
             lastUpdated = Date()
             loadFailed = false
-            if state == .loading { state = .normal }             // 스켈레톤→정상
+            isRefreshing = false
+            // 복귀 조건 확장 — authFailed/wsDisconnected에서 refresh 후 quote 도착 시에도 .normal 복귀(design.md §②)
+            if state == .loading || state == .authFailed || state == .wsDisconnected { state = .normal }
         case let .marketStatus(status):
             marketStatus = status
             lastPolledStatus = status
         case let .connection(connected):
             if connected {
-                if state == .wsDisconnected { state = .normal }  // 재연결 → 경고 제거
+                // wsDisconnected 직접 복귀 또는 refresh 선리셋(.loading)으로 진입한 경로 양쪽 처리(design.md 매트릭스 행5)
+                if state == .wsDisconnected || (isRefreshing && state == .loading) { state = .normal }
+                isRefreshing = false    // .connection(true) = 재구독 성공 → 스피너 해제(행5 기대 UI)
             } else if state == .normal {
                 state = .wsDisconnected                          // 끊김 → 경고(마지막값 유지)
             }
         case let .error(err):
+            isRefreshing = false    // 에러 경로에서 스피너 무한 회전 방지(design.md §② R2)
             switch err {
-            case .authFailed: state = .authFailed                // 앱 재시작 안내 배너(Q15)
+            case .authFailed: state = .authFailed                // 재실패 시 배너 재노출(T-VM3)
             case .loadFailed: loadFailed = true                  // 배너 + 캐시값 유지(빈 화면 금지)
             }
         }
@@ -180,10 +195,16 @@ final class WatchlistViewModel: ObservableObject {
         undoToast = nil
     }
 
-    /// 네트워크 배너 "다시 시도"(V13) — 캐시값 유지한 채 초기 로드 재시도.
-    func retry() {
-        guard !symbols.isEmpty else { return }
-        loadFailed = false
+    /// 전(全)상태 복구 액션 — P1 수동 버튼·P2 NWPath 자동 복구·배너 "다시 시도" 공유 단일 진입점.
+    /// retry()를 흡수(design.md §⑤, 게이트 Q2). authFailed 포함 어떤 상태에서도 파이프라인 재트리거.
+    func refresh() {
+        guard !isRefreshing else { return }     // 중복 호출 가드 — service.start 1회 초과 금지(T-VM9)
+        guard !symbols.isEmpty else { return }  // V1(EmptyState)에서 무동작(이슈3 결정=숨김과 정합)
+        isRefreshing = true
+        // state 선리셋 — authFailed/wsDisconnected에서 apply(.quote) 복귀 조건이 .loading 경유로 확실히 동작
+        // .normal은 건드리지 않음(정상 중 새로고침 시 캐시 화면 유지 — 수용 기준 5번)
+        if state != .normal { state = .loading }
+        loadFailed = false                      // 네트워크 배너 제거(기존 retry() 동작 계승)
         Task { await service.start(codes: symbols.map(\.code)) }
     }
 
