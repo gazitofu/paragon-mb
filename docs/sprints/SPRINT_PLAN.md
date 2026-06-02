@@ -5,11 +5,12 @@
 - 기능: refresh-recovery (새로고침 / 자동복구)
 - PRD: /Users/gazitofu/Vault/appdev/PARAGON-MB/prd/refresh-recovery/
 - 모드: Standard  (Auto-Strict 트리거 전무 — schema/auth-logic/destructive/deploy/dependency 없음. authFailed "복구 트리거" 변경이지 auth 로직 변경 아님)
-- 상태: in-progress
+- 상태: done  (전 태스크 T1~T5 done — 2026-06-02 마무리)
 - 승인된 Spec 편차 (사용자 게이트 2026-06-01):
-  - ① VM 테스트 위치: tasks.md T9 `Tests/PMCoreTests/WatchlistViewModelRefreshTests.swift` → **`Tests/AppTests/WatchlistViewModelRefreshTests.swift`**. 이유: `WatchlistViewModel`은 App 타겟(PMCore 모듈 아님)이라 PMCoreTests가 `@testable import` 불가. → Xcode App용 unit test 타겟 신설로 해소.
+  - ① VM 테스트 위치: tasks.md T9 `Tests/PMCoreTests/WatchlistViewModelRefreshTests.swift` → **`Tests/AppTests/WatchlistViewModelRefreshTests.swift`**. 이유: `WatchlistViewModel`은 App 타겟(PMCore 모듈 아님)이라 PMCoreTests가 `@testable import` 불가. → Xcode App용 unit test 타겟 신설로 해소. **(마무리에서 tasks.md/design.md 본문 경로 정정 완료 2026-06-02)**
   - ② `project.yml`에 Xcode unit test 타겟 `PARAGON-MBTests` 신설 (design.md affects 외 — 빌드 인프라). 실행 = `xcodebuild test -scheme PARAGON-MB`.
-- Phase 2 docs 갱신(표준): 마무리에서 architecture.md 1줄(WatchlistViewModel refresh + NetworkPathReachability 컴포넌트) 갱신 예정.
+- Phase 2 docs 갱신(표준): 마무리에서 architecture.md WatchlistViewModel refresh + NetworkPathReachability 컴포넌트 갱신 완료(2026-06-02). API_SPEC/DB_SCHEMA는 change_type=표준이라 영향 없음(SSOT 동기화 검증 통과).
+- 라이브/수동 검증 잔여: V11~V17 오너 Xcode 수동 게이트(자동 루프 밖, 장중 09:00–15:30 KST 일부 필요).
 
 ## Tasks
 
@@ -57,14 +58,14 @@
 
 ### Task 5: MarketStatusHeader 새로고침 버튼 배선 (T7)
 - 유형: implement
-- 상태: pending
+- 상태: done
 - 담당: developer
 - 의존: task-3 (refresh()/isRefreshing)
 - 시도: 1
-- 산출물: App/Views/MarketStatusHeader.swift
+- 산출물: App/Views/MarketStatusHeader.swift (refreshButton 신규 + headerRow addButton 직전 삽입 + AlertBanner .authFailed 문구 변경) · docs/OPERATIONAL_NOTES.md (+1줄)
 - 내용: refreshButton(arrow.clockwise↔ProgressView, disabled(isRefreshing), ⌘R, 조건부 표시) · headerRow 삽입 · AlertBanner onRetry→refresh() · authFailed 문구 변경
-- 검증: 빌드 통과 + V16 헤더 1줄 레이아웃 정성 확인. V11~V17 라이브 QA는 코드 완료 후 오너 Xcode 수동 게이트
-- commit: (미정)
+- 검증: BUILD SUCCEEDED + swift test 46/46 회귀 0 + xcodebuild test AppTests 11/11(fresh derivedDataPath 캐시 우회) 회귀 0. reviewer 치명 0(T7 7속성 7/7, 경계규칙 ⓐ 통과). qa PASS(V16 정적 검증 — EmptyState/isAdding 미렌더 로직). V11~V17 라이브 QA는 오너 Xcode 수동 게이트(자동 루프 밖)
+- commit: 1b3a46b (feat) + {docs SHA 마무리 후 기록}
 
 ## 라이브/수동 검증 (코드 완료 후 오너 Xcode 게이트 — sprint 자동 루프 밖)
 - V11 authFailed→새로고침 버튼→재시작 없이 복귀 (수용 1)
