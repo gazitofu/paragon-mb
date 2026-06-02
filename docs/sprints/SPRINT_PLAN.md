@@ -42,17 +42,18 @@
 - 산출물: App/ViewModels/WatchlistViewModel.swift (+ MarketStatusHeader.swift onRetry→refresh() 1행, 빌드 유지)
 - 내용: isRefreshing 플래그(T2) · refresh()(T3) · reachability init/start/deinit 배선(T4) · apply 복귀조건·error isRefreshing=false(T5) · retry() 삭제(T6) + 보강: 행5 .connection(true) 단독 복귀 가드(isRefreshing && .loading)
 - 검증: BUILD SUCCEEDED + swift test 46/46 회귀 0 + 계약 매트릭스 11행 반영 (전이 단언은 Task 4). reviewer 행5 닫힘 PASS
-- commit: (미정)
+- commit: 84df48b (feat) + ef52323 (docs)
 
 ### Task 4: WatchlistViewModel refresh 단위 테스트 (T9, 편차①)
 - 유형: implement
-- 상태: pending
+- 상태: done
 - 담당: developer
 - 의존: task-2 (test 타겟) · task-3 (VM 로직)
-- 시도: 1
-- 산출물: Tests/AppTests/WatchlistViewModelRefreshTests.swift (신규) — mock NetworkReachability · mock QuoteServicing 주입
-- 검증: V1~V9 (T-VM1~10), `xcodebuild test -scheme PARAGON-MB`. Units&Signs Audit 3행(중복가드/생명주기/edge)
-- commit: (미정)
+- 시도: 1 (developer inner loop 3회)
+- 산출물: Tests/AppTests/WatchlistViewModelRefreshTests.swift (신규, testV1~testV10)
+- 검증: V1~V9 (T-VM1~10) PASS — AppTests 10/10 + PMCore 46/46 회귀 0 (`xcodebuild test`/`swift test`, fresh derivedDataPath 캐시 우회). reviewer 치명 0 PASS(★V5 단독복귀 fake-green 아님 확인), qa 독립 재실행 PASS. Units&Signs Audit 3행(중복가드 V9/생명주기 V2·V3/행5 단독복귀 V5)
+- 권장 cleanup(후속): drainTasks() sleep 5ms → 결정론적 신호 / line 197 MARK `★V4`→`★V5` 오기 / design·tasks 문서 경로 `Tests/PMCoreTests/`→`Tests/AppTests/` 정정(승인 편차①, 마무리 단계)
+- commit: 86f4771 (test) + docs 후속
 
 ### Task 5: MarketStatusHeader 새로고침 버튼 배선 (T7)
 - 유형: implement
