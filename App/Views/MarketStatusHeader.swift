@@ -37,11 +37,35 @@ struct MarketStatusHeader: View {
                 if let badge = activeBadge {
                     StatusBadge(kind: badge)
                 }
+                if !viewModel.symbols.isEmpty {
+                    refreshButton
+                }
                 addButton
             }
         }
         .padding(.horizontal, PMSpace.panelX)
         .padding(.vertical, PMSpace.headerY)
+    }
+
+    private var refreshButton: some View {
+        Button {
+            viewModel.refresh()
+        } label: {
+            if viewModel.isRefreshing {
+                ProgressView()
+                    .controlSize(.small)
+                    .frame(width: 22, height: 22)
+            } else {
+                Image(systemName: "arrow.clockwise")
+                    .foregroundStyle(PMColor.sapphire)
+                    .frame(width: 22, height: 22)
+            }
+        }
+        .buttonStyle(.plain)
+        .overlay(RoundedRectangle(cornerRadius: 5).stroke(PMColor.border))
+        .disabled(viewModel.isRefreshing)
+        .accessibilityLabel(viewModel.isRefreshing ? "새로고침 중" : "새로고침")
+        .keyboardShortcut("r", modifiers: .command)
     }
 
     private var addButton: some View {
@@ -164,7 +188,7 @@ private struct AlertBanner: View {
     private var message: String {
         switch kind {
         case .wsDisconnected: return "실시간 연결 끊김 — 재연결 중"
-        case .authFailed: return "인증이 만료되었습니다 — 앱을 재시작해 주세요"
+        case .authFailed: return "인증이 만료되었습니다 — 새로고침해 주세요"
         case .networkError: return "네트워크 연결을 확인해 주세요"
         }
     }
