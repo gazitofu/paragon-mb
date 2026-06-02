@@ -31,17 +31,17 @@
 - 시도: 2
 - 산출물: project.yml (PARAGON-MBTests 타겟 + 스킴 test action) · Tests/AppTests/ 디렉토리 + 스모크 테스트 1건
 - 검증: `xcodegen generate` 성공 + `xcodebuild test -scheme PARAGON-MB` 스모크 1/1 PASS (fresh DerivedData 캐시 우회 확인) — attempt 2 PASS (attempt 1: GENERATE_INFOPLIST_FILE 누락으로 FAIL)
-- commit: (미정)
+- commit: 44f47d2 (feat) + 444f372 (docs)
 
 ### Task 3: WatchlistViewModel refresh 상태기계 (T2~T6)
 - 유형: implement
-- 상태: pending
+- 상태: done
 - 담당: developer
 - 의존: task-1 (NetworkReachability protocol)
 - 시도: 1
-- 산출물: App/ViewModels/WatchlistViewModel.swift
-- 내용: isRefreshing 플래그(T2) · refresh()(T3) · reachability init/start/deinit 배선(T4) · apply 복귀조건·error isRefreshing=false(T5) · retry() 삭제(T6)
-- 검증: Task 4 단위 테스트로 잠금 (빌드 통과는 본 태스크)
+- 산출물: App/ViewModels/WatchlistViewModel.swift (+ MarketStatusHeader.swift onRetry→refresh() 1행, 빌드 유지)
+- 내용: isRefreshing 플래그(T2) · refresh()(T3) · reachability init/start/deinit 배선(T4) · apply 복귀조건·error isRefreshing=false(T5) · retry() 삭제(T6) + 보강: 행5 .connection(true) 단독 복귀 가드(isRefreshing && .loading)
+- 검증: BUILD SUCCEEDED + swift test 46/46 회귀 0 + 계약 매트릭스 11행 반영 (전이 단언은 Task 4). reviewer 행5 닫힘 PASS
 - commit: (미정)
 
 ### Task 4: WatchlistViewModel refresh 단위 테스트 (T9, 편차①)
