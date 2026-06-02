@@ -34,8 +34,9 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
-        CODE_SIGN_STYLE: Manual       # 로컬 ad-hoc 서명("Sign to Run Locally") — 개발팀 불요
-        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual       # 안정적 Development 서명(B1) — DR 고정 → keychain "Always Allow" 영구 지속 (handoff §keychain/서명). ad-hoc("-")은 빌드마다 cdhash 변동으로 재프롬프트 유발했음.
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: F29HVM9355  # 무료 Personal Team (jinhyung_park@outlook.com). macOS 로컬 개발은 provisioning profile 불요 — Development cert 직접 서명.
         ENABLE_HARDENED_RUNTIME: NO
         DEAD_CODE_STRIPPING: YES
 
@@ -52,7 +53,8 @@ targets:
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PARAGON-MB.app/Contents/MacOS/PARAGON-MB"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: F29HVM9355
         ENABLE_HARDENED_RUNTIME: NO
         GENERATE_INFOPLIST_FILE: YES
 
