@@ -47,16 +47,18 @@
 - 산출물: Sources/PMCore/Network/KISQuoteParser.swift(신규 ~130줄) / Tests/PMCoreTests/QuoteParsingTests.swift(KIS 18케이스 추가, 기존 9 보존) / Sources/PMCore/Network/KISRESTClient.swift(R1 3줄 수렴) / docs/OPERATIONAL_NOTES.md / 리뷰 docs/reviews/kis-migration-task-3-review.md / QA docs/sprints/kis-migration-task-3-qa.md
 - 이월 처리: R1 흡수 완료 / R2 잔여 케이스 테스트 잠금 완료 / R3 static화 스킵 확정(qa 작성 KISRESTClientTests 5케이스 보존 우선 — instance 유지)
 - 리뷰 이월 (Task 4/5): parseStockInfo CTPF1002R 필드 불일치(pdno 12자리) 호출처 확정 시 해소 · lookupPrice sdpr>0 가드 비대칭 검토
-- commit: (미정)
+- commit: f6c9e52 (feat) + 51f4626 (sprint docs)
 
 ### Task 4: KISWebSocketClient — 골격(Event 불변·approvalKeyProvider) → 프로토콜(envelope·46필드 청킹 위임·PINGPONG)
 - 유형: implement
 - 매핑: tasks.md T7 + T8 (design.md §구현 분할 계획 — 골격 단일 Write 후 섹션 1~2 staged Edit)
-- 상태: pending
+- 상태: done  (dev 1회 → review PASS 치명0/권장2/참고3 → qa 4 PASS/1 N-A, swift test 83개 회귀0. Event enum 키움과 문자 단위 동일 = QuoteService 계약 경계 보존)
 - 담당: developer
 - 의존: task-3
 - 시도: 1
-- 산출물: (미정)
+- 산출물: Sources/PMCore/Network/KISWebSocketClient.swift(신규 ~210줄 actor) / docs/OPERATIONAL_NOTES.md / 리뷰 docs/reviews/kis-migration-task-4-review.md / QA docs/sprints/kis-migration-task-4-qa.md
+- QA 갭 기록: handle/handleJSON/handleRaw private — 단위 테스트 표면 없음(키움 동일 패턴). 체결 수신 경로는 라이브 V-A2·A6 커버 예정
+- 리뷰 이월 (Task 5): ① .connected 멱등화 검토 ② WS approval 영구 실패 가시화 갭 ③ KISWebSocketClient·KISEnvironment·KISCredential·KISRESTClient 전부 배선 게이트 (미배선 잔존 시 치명 승격) ④ RESTError→SymbolLookupError 매핑
 - commit: (미정)
 
 ### Task 5: 조립 — Info.plist ATS 예외 + AppDelegate 조립 루트 KIS 교체
