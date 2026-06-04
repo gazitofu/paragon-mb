@@ -206,13 +206,14 @@ public struct KISRESTClient {
         guard let out = dto.output else {
             throw RESTError.lookupFailed("output 없음 (code=\(code))")
         }
-        guard let priceStr = out.stck_prpr, let price = Int(priceStr), price > 0 else {
+        guard let priceStr = out.stck_prpr, let price = KISQuoteParser.parseSignedInt(priceStr), price > 0 else {
             throw RESTError.lookupFailed("stck_prpr 누락/파싱 실패 (code=\(code))")
         }
-        // prdy_vrss: signed 직접 파싱 (부호 필드 `prdy_vrss_sign` 재구성 금지 — 경계 규칙 ④)
+        // prdy_vrss: signed 직접 파싱 via KISQuoteParser.parseSignedInt (콤마·부호 견고 처리 — R1 수렴)
+        // 부호 필드 `prdy_vrss_sign` 재구성 금지 — 경계 규칙 ④
         // stck_sdpr(기준가=전일종가) 우선, 없으면 price - prdy_vrss 역산
-        let change = out.prdy_vrss.flatMap { Int($0) } ?? 0
-        let previousClose = out.stck_sdpr.flatMap { Int($0) } ?? (price - change)
+        let change = out.prdy_vrss.flatMap { KISQuoteParser.parseSignedInt($0) } ?? 0
+        let previousClose = out.stck_sdpr.flatMap { KISQuoteParser.parseSignedInt($0) } ?? (price - change)
         return Quote(price: price, previousClose: previousClose)
     }
 

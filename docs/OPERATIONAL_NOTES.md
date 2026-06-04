@@ -11,6 +11,7 @@
 
 ## 주의사항
 
+- [2026-06-04] KISQuoteParser(신규) — parseExecutionChunked(46×N 청킹), parseRecord([0]~[5] signed 직접+sign 검증), parseStockInfo(CTPF1002R), parsePrice(FHKST01010100), parseSignedInt/Double. KISRESTClient.lookupPrice 숫자 파싱 KISQuoteParser.parseSignedInt 수렴(R1). QuoteParsingTests에 KISQuoteParserTests 18케이스 추가(기존 Kiwoom 단언 보존). swift test 83/83 PASS 회귀 0. (developer)
 - [2026-06-04] KISRESTClient(신규) — ThrottleQueue actor(600ms 직렬 가드) + issueToken(tokenP `appsecret`) + issueApprovalKey(Approval `secretkey`) + lookupName(CTPF1002R `prdt_abrv_name` trim) + lookupPrice(FHKST01010100 `stck_sdpr` → Quote.previousClose, prdy_vrss signed 직접). swift test 46/46 PASS 회귀 0, 기존 테스트 무수정. (developer)
 - [2026-06-04] KISEnvironment(신규)·KISCredential(KeychainStore 추가) — KiwoomEnvironment/KiwoomCredential과 병존. AppDelegate는 Task 10(조립 루트)에서 KIS로 전환 전까지 Kiwoom 식별자 유지. swift test 46 Suite passed, 회귀 0. (developer)
 
