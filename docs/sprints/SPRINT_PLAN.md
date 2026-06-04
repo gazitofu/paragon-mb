@@ -1,79 +1,91 @@
 # Sprint Plan
 
 ## Meta
-- 생성일: 2026-06-01
-- 기능: refresh-recovery (새로고침 / 자동복구)
-- PRD: /Users/gazitofu/Vault/appdev/PARAGON-MB/prd/refresh-recovery/
-- 모드: Standard  (Auto-Strict 트리거 전무 — schema/auth-logic/destructive/deploy/dependency 없음. authFailed "복구 트리거" 변경이지 auth 로직 변경 아님)
-- 상태: done  (전 태스크 T1~T5 done — 2026-06-02 마무리)
-- 승인된 Spec 편차 (사용자 게이트 2026-06-01):
-  - ① VM 테스트 위치: tasks.md T9 `Tests/PMCoreTests/WatchlistViewModelRefreshTests.swift` → **`Tests/AppTests/WatchlistViewModelRefreshTests.swift`**. 이유: `WatchlistViewModel`은 App 타겟(PMCore 모듈 아님)이라 PMCoreTests가 `@testable import` 불가. → Xcode App용 unit test 타겟 신설로 해소. **(마무리에서 tasks.md/design.md 본문 경로 정정 완료 2026-06-02)**
-  - ② `project.yml`에 Xcode unit test 타겟 `PARAGON-MBTests` 신설 (design.md affects 외 — 빌드 인프라). 실행 = `xcodebuild test -scheme PARAGON-MB`.
-- Phase 2 docs 갱신(표준): 마무리에서 architecture.md WatchlistViewModel refresh + NetworkPathReachability 컴포넌트 갱신 완료(2026-06-02). API_SPEC/DB_SCHEMA는 change_type=표준이라 영향 없음(SSOT 동기화 검증 통과).
-- 라이브/수동 검증 잔여: V11~V17 오너 Xcode 수동 게이트(자동 루프 밖, 장중 09:00–15:30 KST 일부 필요).
-- archived_to: Vault/archive/appdev/PARAGON-MB/prd/2026-06-02_refresh-recovery/ (2026-06-02, 사용자 게이트 승인)
+- 생성일: 2026-06-04
+- 기능: kis-migration (watchlist-realtime 데이터 프로바이더 KIS 이식)
+- PRD: /Users/gazitofu/Vault/appdev/PARAGON-MB/prd/kis-migration/
+- 모드: Strict  (Auto-Strict: auth 접점 TokenManager·approval_key·Keychain 식별자 + ATS Info.plist env config + provider 전면 교체)
+- 상태: in-progress
+- 브랜치: feat/kis-migration (로컬 feature 브랜치 — remote 부재로 PR 생략, closeout 시 main 머지. 사용자 승인 2026-06-04)
+- 이전 plan 백업: SPRINT_PLAN-2026-06-02.md (refresh-recovery, done)
+- 요구사항 SSOT: git docs/API_SPEC.md §[3] 이식 체크리스트 7항 + §실측 확정. 태스크 정의 SSOT: Vault prd/kis-migration/tasks.md (T0~T10 + V-*).
+- closeout 체크리스트: ① API_SPEC §부록 키움 legacy 삭제 (reviewer 메모 — affects 등재, 이식 완료 시점) ② CHANGELOG required ③ release closeout required ④ main 머지
 
 ## Tasks
 
-### Task 1: NetworkPathReachability 어댑터 + 단위 테스트 (T1+T8)
+### Task 1: KIS 기반 레이어 — KISEnvironment 치환 + Keychain 식별자 교체 (+T0 docs 정합 확인)
 - 유형: implement
-- 상태: done
+- 매핑: tasks.md T0 + T1 + T2
+- 전략: KIS* 신규 병존 — 키움 legacy 즉시 삭제 금지(design.md:80, 검증 완료 후 정리). 매 태스크 종료 시 빌드+기존 테스트 그린.
+- 상태: done  (dev 1회 → review PASS 치명0/권장1/참고2 → qa 6/6 PASS, swift test 46개 회귀0)
 - 담당: developer
 - 의존: 없음
 - 시도: 1
-- 산출물: Sources/PMCore/Network/NetworkPathReachability.swift (신규) · Tests/PMCoreTests/NetworkPathReachabilityTests.swift (신규)
-- 검증: V10 (T-NW1 최초 satisfied 콜백 0회 / T-NW2 unsatisfied→satisfied 1회), `swift test` — PASS 34/34
-- commit: 18c432e (feat) + d54f1d2 (docs)
+- 산출물: Sources/PMCore/Network/KISEnvironment.swift(신규) / Sources/PMCore/Auth/KeychainStore.swift(KISCredential additive) / docs/OPERATIONAL_NOTES.md / 리뷰 docs/reviews/kis-migration-task-1-review.md / QA docs/sprints/kis-migration-task-1-qa.md
+- 리뷰 이월: Task 5 조립 리뷰에서 KISEnvironment·KISCredential reachability 게이트 필수 (미연결 잔존 시 치명)
+- commit: (미정)
 
-### Task 2: Xcode unit test 타겟 신설 (인프라 — 편차②)
+### Task 2: KISRESTClient — 골격+600ms 스로틀 → 인증(tokenP·Approval) → 조회(CTPF1002R·FHKST01010100)
 - 유형: implement
-- 상태: done
+- 매핑: tasks.md T3 + T4 + T5 (design.md §구현 분할 계획 — 골격 단일 Write 후 섹션 1~3 staged Edit)
+- 상태: pending
+- 담당: developer
+- 의존: task-1
+- 시도: 1
+- 산출물: (미정)
+- commit: (미정)
+
+### Task 3: KISQuoteParser + 파서 테스트 KIS 재잠금 + Units & Signs Audit
+- 유형: implement
+- 매핑: tasks.md T6 + V-C1 + V-C2 (signed 직접 파싱 + sign 검증용 — Module Map 경계 규칙 ④ 강제)
+- 상태: pending
 - 담당: developer
 - 의존: 없음
-- 시도: 2
-- 산출물: project.yml (PARAGON-MBTests 타겟 + 스킴 test action) · Tests/AppTests/ 디렉토리 + 스모크 테스트 1건
-- 검증: `xcodegen generate` 성공 + `xcodebuild test -scheme PARAGON-MB` 스모크 1/1 PASS (fresh DerivedData 캐시 우회 확인) — attempt 2 PASS (attempt 1: GENERATE_INFOPLIST_FILE 누락으로 FAIL)
-- commit: 44f47d2 (feat) + 444f372 (docs)
-
-### Task 3: WatchlistViewModel refresh 상태기계 (T2~T6)
-- 유형: implement
-- 상태: done
-- 담당: developer
-- 의존: task-1 (NetworkReachability protocol)
 - 시도: 1
-- 산출물: App/ViewModels/WatchlistViewModel.swift (+ MarketStatusHeader.swift onRetry→refresh() 1행, 빌드 유지)
-- 내용: isRefreshing 플래그(T2) · refresh()(T3) · reachability init/start/deinit 배선(T4) · apply 복귀조건·error isRefreshing=false(T5) · retry() 삭제(T6) + 보강: 행5 .connection(true) 단독 복귀 가드(isRefreshing && .loading)
-- 검증: BUILD SUCCEEDED + swift test 46/46 회귀 0 + 계약 매트릭스 11행 반영 (전이 단언은 Task 4). reviewer 행5 닫힘 PASS
-- commit: 84df48b (feat) + ef52323 (docs)
+- 산출물: (미정)
+- commit: (미정)
 
-### Task 4: WatchlistViewModel refresh 단위 테스트 (T9, 편차①)
+### Task 4: KISWebSocketClient — 골격(Event 불변·approvalKeyProvider) → 프로토콜(envelope·46필드 청킹 위임·PINGPONG)
 - 유형: implement
-- 상태: done
+- 매핑: tasks.md T7 + T8 (design.md §구현 분할 계획 — 골격 단일 Write 후 섹션 1~2 staged Edit)
+- 상태: pending
 - 담당: developer
-- 의존: task-2 (test 타겟) · task-3 (VM 로직)
-- 시도: 1 (developer inner loop 3회)
-- 산출물: Tests/AppTests/WatchlistViewModelRefreshTests.swift (신규, testV1~testV10)
-- 검증: V1~V9 (T-VM1~10) PASS — AppTests 10/10 + PMCore 46/46 회귀 0 (`xcodebuild test`/`swift test`, fresh derivedDataPath 캐시 우회). reviewer 치명 0 PASS(★V5 단독복귀 fake-green 아님 확인), qa 독립 재실행 PASS. Units&Signs Audit 3행(중복가드 V9/생명주기 V2·V3/행5 단독복귀 V5)
-- 권장 cleanup(후속): drainTasks() sleep 5ms → 결정론적 신호 / line 197 MARK `★V4`→`★V5` 오기 / design·tasks 문서 경로 `Tests/PMCoreTests/`→`Tests/AppTests/` 정정(승인 편차①, 마무리 단계)
-- commit: 86f4771 (test) + 1809e1a (docs)
-
-### Task 5: MarketStatusHeader 새로고침 버튼 배선 (T7)
-- 유형: implement
-- 상태: done
-- 담당: developer
-- 의존: task-3 (refresh()/isRefreshing)
+- 의존: task-3
 - 시도: 1
-- 산출물: App/Views/MarketStatusHeader.swift (refreshButton 신규 + headerRow addButton 직전 삽입 + AlertBanner .authFailed 문구 변경) · docs/OPERATIONAL_NOTES.md (+1줄)
-- 내용: refreshButton(arrow.clockwise↔ProgressView, disabled(isRefreshing), ⌘R, 조건부 표시) · headerRow 삽입 · AlertBanner onRetry→refresh() · authFailed 문구 변경
-- 검증: BUILD SUCCEEDED + swift test 46/46 회귀 0 + xcodebuild test AppTests 11/11(fresh derivedDataPath 캐시 우회) 회귀 0. reviewer 치명 0(T7 7속성 7/7, 경계규칙 ⓐ 통과). qa PASS(V16 정적 검증 — EmptyState/isAdding 미렌더 로직). V11~V17 라이브 QA는 오너 Xcode 수동 게이트(자동 루프 밖)
-- commit: 1b3a46b (feat) + 7e0be7c (docs)
+- 산출물: (미정)
+- commit: (미정)
 
-## 라이브/수동 검증 (코드 완료 후 오너 Xcode 게이트 — sprint 자동 루프 밖)
-- V11 authFailed→새로고침 버튼→재시작 없이 복귀 (수용 1)
-- V12 진행 중 스피너+disabled+연타 무반응 (수용 3)
-- V13 동일망 wifi off→on→자동 refresh+스피너 (수용 4·7)
-- V14 normal 새로고침 화면 안깨짐 캐시 유지 (수용 5)
-- V15 loadFailed 배너 재시도 캐시 유지 (수용 6)
-- V16 320pt 헤더 1줄 수용 + V1/isAdding 시 버튼 숨김
-- V17 .transient 닫힘→재오픈 스피너 복원
-- V18 [KIS 후] 외부망 전환 IP 변경 자동 복귀 (수용 8) — 보류
+### Task 5: 조립 — Info.plist ATS 예외 + AppDelegate 조립 루트 KIS 교체
+- 유형: implement
+- 매핑: tasks.md T9 + T10 (symbolLookup 클로저 = CTPF1002R 종목명만, 초기 시세는 QuoteService.loadInitial REST 경로 — s24 설계 결정)
+- 상태: pending
+- 담당: developer
+- 의존: task-1, task-2, task-3, task-4
+- 시도: 1
+- 산출물: (미정)
+- commit: (미정)
+
+### Task 6: 자동화 검증 스위프 — 회귀 0 게이트
+- 유형: implement (검증 중심 — 수정은 발견 결함 한정)
+- 매핑: tasks.md V-C1b + V-B1t + V-B2 + V-C4
+- 상태: pending
+- 담당: developer
+- 의존: task-5
+- 시도: 1
+- 산출물: (미정)
+- commit: (미정)
+
+## 라이브/수동 검증 (자동 루프 밖 — 오너 게이트)
+
+> 거래일 09:00–15:30 KST 한정 항목 포함. 명세 = Vault prd/kis-migration/tasks.md §검증 단계.
+
+- [ ] V-A1 (라이브): 종목 등록 → CTPF1002R 종목명 + 초기 시세, EGW00201 0회
+- [ ] V-A1e (라이브): 등록 실패 분기 (P6 실제 형태 관측·보정)
+- [ ] V-A2 (라이브): WS 체결 0.3s 내 하이라이트·갱신 (멀티 레코드 청킹)
+- [ ] V-A3 (라이브): 부호 체계 정확 표시 + P5 REST 하락 부호 종결 (비-blocking)
+- [ ] V-A4 (라이브): 20개 한도 + P7 WS 한도 종결
+- [ ] V-A5 (라이브): 삭제 시 구독 즉시 제거
+- [ ] V-A6 (라이브): WS 재연결 구독 자동 복구
+- [ ] V-B1 (일부 라이브): 토큰 24h 갱신 지속 end-to-end
+- [ ] V-C3 (장외 가능): 장외 종가 + 장상태 라벨 + 갱신 정지
+- [ ] (겸사) keychain 서명 오너 런타임 게이트 — 첫 실행 "Always Allow" 1회 → 재빌드 무프롬프트 (s20 잔여)
