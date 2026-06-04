@@ -25,7 +25,8 @@
 //          ⚠️ KIS WS는 ws://(평문) 문서값 — macOS ATS가 script에서 차단할 수 있음.
 //             앱은 Info.plist ATS 예외로 해결 예정. PoC는 wss 우선 시도 + 실패 진단.
 //
-// 자격증명은 Keychain(kr.co.koreainvestment.paragon.{appkey,appsecret})에서 로드 — 값 비출력.
+// 자격증명은 env 파일(기본 ~/.config/secrets/api.env, override=PARAGON_SECRETS_ENV) 우선 → Keychain 폴백 로드 — 값 비출력.
+//   (사용자 결정 2026-06-03: KIS 키 변경분을 env에서 직접 읽음. decisions/2026-06-03-kis-credentials-from-env.md)
 
 import Foundation
 import Security
@@ -52,6 +53,35 @@ func keychain(_ service: String) -> String? {
     guard SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess,
           let d = item as? Data, let s = String(data: d, encoding: .utf8) else { return nil }
     return s.trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+// env 파일(기본 ~/.config/secrets/api.env, override=PARAGON_SECRETS_ENV)에서 KEY 값 로드.
+// 형식: optional `export `, KEY=VALUE, 따옴표·#주석·공백 허용. 값은 로그에 비출력(Floor 4).
+func envFileValue(_ key: String) -> String? {
+    let path = ProcessInfo.processInfo.environment["PARAGON_SECRETS_ENV"]
+        ?? (NSHomeDirectory() as NSString).appendingPathComponent(".config/secrets/api.env")
+    guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
+    for raw in content.components(separatedBy: .newlines) {
+        var line = raw.trimmingCharacters(in: .whitespaces)
+        if line.isEmpty || line.hasPrefix("#") { continue }
+        if line.hasPrefix("export ") { line = String(line.dropFirst(7)).trimmingCharacters(in: .whitespaces) }
+        guard let eq = line.firstIndex(of: "="),
+              String(line[..<eq]).trimmingCharacters(in: .whitespaces) == key else { continue }
+        var v = String(line[line.index(after: eq)...]).trimmingCharacters(in: .whitespaces)
+        if v.count >= 2,
+           (v.hasPrefix("\"") && v.hasSuffix("\"")) || (v.hasPrefix("'") && v.hasSuffix("'")) {
+            v = String(v.dropFirst().dropLast())
+        }
+        return v.isEmpty ? nil : v
+    }
+    return nil
+}
+
+// 자격증명 로드: env 파일 우선 → Keychain 폴백(사용자 결정 2026-06-03). source는 비민감(env/keychain 구분만).
+func loadCredential(envKey: String, keychainService service: String) -> (value: String?, source: String) {
+    if let v = envFileValue(envKey) { return (v, "env:\(envKey)") }
+    if let v = keychain(service) { return (v, "keychain:\(service)") }
+    return (nil, "없음")
 }
 
 func toJSON(_ obj: [String: Any]) -> String {
@@ -97,10 +127,12 @@ func dumpRealtimeFields(_ body: String) {
 func run() async -> Int32 {
     log("=== KIS WS 실시간 체결 PoC ===")
     log("symbol=\(symbol)  tr_id=\(trID)  ws=\(wsURLString)")
-    guard let appKey = keychain("kr.co.koreainvestment.paragon.appkey"),
-          let secret = keychain("kr.co.koreainvestment.paragon.appsecret") else {
-        log("[FAIL] Keychain 자격증명 없음"); return 1
+    let appKeyC = loadCredential(envKey: "KIS_APP_KEY", keychainService: "kr.co.koreainvestment.paragon.appkey")
+    let secretC = loadCredential(envKey: "KIS_APP_SECRET", keychainService: "kr.co.koreainvestment.paragon.appsecret")
+    guard let appKey = appKeyC.value, let secret = secretC.value else {
+        log("[FAIL] 자격증명 없음 — env(KIS_APP_KEY/KIS_APP_SECRET)·Keychain 모두 부재"); return 1
     }
+    log("[cred] appkey=\(mask(appKey)) [\(appKeyC.source)]  appsecret=\(mask(secret)) [\(secretC.source)]")
 
     // 1) approval_key
     guard let approvalKey = await issueApprovalKey(appKey: appKey, secret: secret) else {
