@@ -23,16 +23,18 @@
 - 시도: 1
 - 산출물: Sources/PMCore/Network/KISEnvironment.swift(신규) / Sources/PMCore/Auth/KeychainStore.swift(KISCredential additive) / docs/OPERATIONAL_NOTES.md / 리뷰 docs/reviews/kis-migration-task-1-review.md / QA docs/sprints/kis-migration-task-1-qa.md
 - 리뷰 이월: Task 5 조립 리뷰에서 KISEnvironment·KISCredential reachability 게이트 필수 (미연결 잔존 시 치명)
-- commit: (미정)
+- commit: a8d2440 (feat) + a20f0b2 (sprint docs)
 
 ### Task 2: KISRESTClient — 골격+600ms 스로틀 → 인증(tokenP·Approval) → 조회(CTPF1002R·FHKST01010100)
 - 유형: implement
 - 매핑: tasks.md T3 + T4 + T5 (design.md §구현 분할 계획 — 골격 단일 Write 후 섹션 1~3 staged Edit)
-- 상태: pending
+- 상태: done  (dev 1회 → review PASS 치명0/권장3/참고5 → qa 4/4 PASS + 신규 KISRESTClientTests 19케이스, swift test 65개 회귀0)
 - 담당: developer
 - 의존: task-1
 - 시도: 1
-- 산출물: (미정)
+- 산출물: Sources/PMCore/Network/KISRESTClient.swift(신규 264줄) / Tests/PMCoreTests/KISRESTClientTests.swift(qa 신규 19케이스) / docs/OPERATIONAL_NOTES.md / 리뷰 docs/reviews/kis-migration-task-2-review.md / QA docs/sprints/kis-migration-task-2-qa.md
+- 리뷰 이월 (Task 3 흡수): R1 REST 숫자 파싱 콤마/부호 정규화를 KIS 파서 SSOT로 수렴 · R2 잔여(parseExpiry 케이스 일부는 qa 테스트로 선커버) · R3 parseExpiry static화 검토
+- 리뷰 이월 (Task 5 필수): KISRESTClient 4메서드 reachability + RESTError→SymbolLookupError 매핑 검증
 - commit: (미정)
 
 ### Task 3: KISQuoteParser + 파서 테스트 KIS 재잠금 + Units & Signs Audit
