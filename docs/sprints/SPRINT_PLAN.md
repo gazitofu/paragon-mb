@@ -59,16 +59,18 @@
 - 산출물: Sources/PMCore/Network/KISWebSocketClient.swift(신규 ~210줄 actor) / docs/OPERATIONAL_NOTES.md / 리뷰 docs/reviews/kis-migration-task-4-review.md / QA docs/sprints/kis-migration-task-4-qa.md
 - QA 갭 기록: handle/handleJSON/handleRaw private — 단위 테스트 표면 없음(키움 동일 패턴). 체결 수신 경로는 라이브 V-A2·A6 커버 예정
 - 리뷰 이월 (Task 5): ① .connected 멱등화 검토 ② WS approval 영구 실패 가시화 갭 ③ KISWebSocketClient·KISEnvironment·KISCredential·KISRESTClient 전부 배선 게이트 (미배선 잔존 시 치명 승격) ④ RESTError→SymbolLookupError 매핑
-- commit: (미정)
+- commit: 61d4b53 (feat) + 07002ea (sprint docs)
 
 ### Task 5: 조립 — Info.plist ATS 예외 + AppDelegate 조립 루트 KIS 교체
 - 유형: implement
-- 매핑: tasks.md T9 + T10 (symbolLookup 클로저 = CTPF1002R 종목명만, 초기 시세는 QuoteService.loadInitial REST 경로 — s24 설계 결정)
-- 상태: pending
+- 매핑: tasks.md T9 + T10 (symbolLookup 클로저 = CTPF1002R 종목명만, 초기 시세는 QuoteService.loadInitial REST 경로 — s24 설계 결정) + Task 1~4 이월 배선 게이트
+- 상태: done  (dev 1회 → review PASS 치명0/권장0/참고3 → qa 9/9 PASS. swift test 83 + AppTests 11 fresh derivedDataPath 회귀0, 배선 게이트 KIS* 5/5 도달, ATS ops.koreainvestment.com 단일 한정)
 - 담당: developer
 - 의존: task-1, task-2, task-3, task-4
 - 시도: 1
-- 산출물: (미정)
+- 산출물: project.yml(ATS +4줄) / App/AppDelegate.swift(KIS 전환 65줄) / Sources/PMCore/Service/QuoteService.swift(타입 참조 갱신 — tasks.md T10 명시 범위) / docs/OPERATIONAL_NOTES.md / 리뷰 docs/reviews/kis-migration-task-5-review.md / QA docs/sprints/kis-migration-task-5-qa.md
+- 이월 처리: ① .connected 멱등화 — WatchlistViewModel 조건부 전이로 이미 멱등, 변경 불요 기록 ② approval 영구 실패 가시화 — MVP 제외 유지(s23 결정), loadInitial→authFailed 경로가 자격증명 오류 커버, approval 단독 엣지는 ops 노트 수집 대상 ③ 배선 게이트 5/5 ④ RESTError→SymbolLookupError 매핑 완료
+- closeout 추가 기록: AddSymbolViewModel 주석에 KiwoomRESTClient 언급 잔존(동작 무영향) — 키움 legacy 정리 시 함께 / Sendable 경고 3건(Swift 5 모드 비차단, Swift 6 전환 시 KISRESTClient actor화 검토)
 - commit: (미정)
 
 ### Task 6: 자동화 검증 스위프 — 회귀 0 게이트
