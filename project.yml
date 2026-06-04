@@ -28,6 +28,10 @@ targets:
         CFBundleName: PARAGON
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            ops.koreainvestment.com:
+              NSExceptionAllowsInsecureHTTPLoads: true  # KIS WS 평문 ws:// — wss TLS 실패 실측(API_SPEC §WS)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: kr.co.paragon.paragon-mb

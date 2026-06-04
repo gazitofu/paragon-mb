@@ -25,10 +25,12 @@ public protocol QuoteServicing: Sendable {
 /// 라이브 오케스트레이션은 Xcode/실연동에서 검증 — 구성요소(parser·REST·WS·clock·token)는 개별 검증됨.
 public actor QuoteService: QuoteServicing {
 
-    private let rest: KiwoomRESTClient
+    private let rest: KISRESTClient
     private let tokenManager: TokenManager
     private let marketClock: MarketClock
-    private let ws: KiwoomWebSocketClient
+    private let ws: KISWebSocketClient
+    private let appKey: String
+    private let appSecret: String
 
     private var codes: [String] = []
     private var wsTask: Task<Void, Never>?
@@ -38,18 +40,21 @@ public actor QuoteService: QuoteServicing {
 
     // MARK: - 골격 (DI)
 
-    public init(environment: KiwoomEnvironment,
-                rest: KiwoomRESTClient,
+    /// approvalKeyProvider: KISWebSocketClient에 주입 (connect마다 발급, 캐시 불요).
+    /// appKey/appSecret: lookupPrice FHKST01010100 헤더 전달용 (KISRESTClient 계약).
+    public init(rest: KISRESTClient,
                 tokenManager: TokenManager,
+                approvalKeyProvider: @escaping KISWebSocketClient.ApprovalKeyProvider,
+                appKey: String,
+                appSecret: String,
                 marketClock: MarketClock = MarketClock(),
                 session: URLSession = .shared) {
         self.rest = rest
         self.tokenManager = tokenManager
         self.marketClock = marketClock
-        self.ws = KiwoomWebSocketClient(
-            environment: environment, session: session,
-            tokenProvider: { try await tokenManager.validToken() }
-        )
+        self.appKey = appKey
+        self.appSecret = appSecret
+        self.ws = KISWebSocketClient(session: session, approvalKeyProvider: approvalKeyProvider)
         var cont: AsyncStream<QuoteUpdate>.Continuation!
         self.updates = AsyncStream<QuoteUpdate> { cont = $0 }
         self.emit = cont
@@ -87,8 +92,8 @@ public actor QuoteService: QuoteServicing {
         catch { emit.yield(.error(.authFailed)); return }
         for code in codes {
             do {
-                let r = try await rest.lookup(code: code, token: token)
-                emit.yield(.quote(code: r.symbol.code, quote: r.quote))
+                let quote = try await rest.lookupPrice(code: code, token: token, appKey: appKey, appSecret: appSecret)
+                emit.yield(.quote(code: code, quote: quote))
             } catch {
                 emit.yield(.error(.loadFailed))
             }
@@ -107,7 +112,7 @@ public actor QuoteService: QuoteServicing {
         }
     }
 
-    private func handle(_ event: KiwoomWebSocketClient.Event) {
+    private func handle(_ event: KISWebSocketClient.Event) {
         switch event {
         case .connected: emit.yield(.connection(true))
         case .disconnected: emit.yield(.connection(false))

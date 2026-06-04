@@ -10,31 +10,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarController = StatusBarController(viewModel: Self.makeWatchlistViewModel())
     }
 
-    /// 조립 루트 — Keychain 자격증명 → REST/Token → QuoteService → Store → WatchlistViewModel.
-    /// 실시간 시작(`viewModel.start()`)은 Phase D에서 패널 첫 열림 시 호출(여기선 그래프만 구성).
+    /// 조립 루트 — Keychain KIS 자격증명 → REST/Token → approvalKeyProvider → QuoteService → Store → WatchlistViewModel.
+    /// 실시간 시작(`viewModel.start()`)은 패널 첫 열림 시 호출(여기선 그래프만 구성).
     @MainActor
     private static func makeWatchlistViewModel() -> WatchlistViewModel {
-        let environment = KiwoomEnvironment.real          // 모의 전환은 v2(KiwoomEnvironment.mock)
-        let rest = KiwoomRESTClient(environment: environment)
+        let rest = KISRESTClient()
 
+        // Keychain KIS 자격증명 — env 직접 읽기 금지(V-B2 게이트, Floor 4).
         let keychain = KeychainStore()
-        let appKey = (try? keychain.get(service: KiwoomCredential.appKey)) ?? nil
-        let appSecret = (try? keychain.get(service: KiwoomCredential.appSecret)) ?? nil
+        let appKey    = (try? keychain.get(service: KISCredential.appKey))    ?? nil
+        let appSecret = (try? keychain.get(service: KISCredential.appSecret)) ?? nil
 
         let tokenManager = TokenManager(fetcher: {
-            guard let appKey, let appSecret else { throw KiwoomRESTClient.RESTError.missingToken }
-            return try await rest.issueToken(appKey: appKey, secret: appSecret)
+            guard let appKey, let appSecret else { throw KISRESTClient.RESTError.missingToken }
+            return try await rest.issueToken(appKey: appKey, appSecret: appSecret)
         })
 
-        let service = QuoteService(environment: environment, rest: rest, tokenManager: tokenManager)
+        // approval_key 발급 클로저 — WS connect마다 1회 호출(KIS 호출마다 새 키, 별도 제한 미관측).
+        let approvalKeyProvider: KISWebSocketClient.ApprovalKeyProvider = {
+            guard let appKey, let appSecret else { throw KISRESTClient.RESTError.missingToken }
+            return try await rest.issueApprovalKey(appKey: appKey, appSecret: appSecret)
+        }
+
+        let service = QuoteService(
+            rest: rest,
+            tokenManager: tokenManager,
+            approvalKeyProvider: approvalKeyProvider,
+            appKey: appKey ?? "",
+            appSecret: appSecret ?? ""
+        )
 
         // M1 경계: child는 REST/token을 모름 — 조립 루트가 RESTError를 SymbolLookupError로 매핑해 주입.
         let symbolLookup: @Sendable (String) async throws -> Symbol = { code in
             do {
                 let token = try await tokenManager.validToken()
-                return try await rest.lookup(code: code, token: token).symbol
-            } catch let error as KiwoomRESTClient.RESTError {
+                return try await rest.lookupName(code: code, token: token, appKey: appKey ?? "", appSecret: appSecret ?? "")
+            } catch let error as KISRESTClient.RESTError {
                 if case .lookupFailed = error { throw SymbolLookupError.invalidCode }
+                if case .apiError = error     { throw SymbolLookupError.invalidCode }
                 throw SymbolLookupError.network
             } catch {
                 throw SymbolLookupError.network
