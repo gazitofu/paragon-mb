@@ -7,7 +7,10 @@
 - 모드: Strict  (Auto-Strict: auth 접점 TokenManager·approval_key·Keychain 식별자 + ATS Info.plist env config + provider 전면 교체)
 - 상태: done  (자동화 영역 — Task 1~6 전부 done 2026-06-04. 라이브/수동 검증 섹션은 오너 게이트 잔여)
 - SSOT 동기화 검증: architecture.md ✅(architect-design 사전 갱신 5590cd3, T0 정합 확인 완료) / API_SPEC.md ✅(Spec Patch 명시 "현 시점 스펙 변경 0" — §부록 키움 legacy 삭제는 라이브 검증 완료 후 키움 소스 정리와 함께)
-- 브랜치: feat/kis-migration (로컬 feature 브랜치 — remote 부재로 PR 생략, closeout 시 main 머지. 사용자 승인 2026-06-04)
+- 브랜치: feat/kis-migration (로컬 feature 브랜치 — remote 부재로 PR 생략. 사용자 승인 2026-06-04)
+- merge_pending: true  (사용자 결정 2026-06-04 — 라이브 골든패스 V-A* PASS 후 main 머지. 라이브 게이트는 브랜치 빌드로 진행)
+- archive_pending: true  (사용자 결정 2026-06-04 — 라이브 검증 후 archive. SOURCE: Vault prd/kis-migration → DEST: archive/appdev/PARAGON-MB/prd/{날짜}_kis-migration/)
+- 라이브 PASS 후 cleanup 스프린트 후보: 키움 legacy 소스 5파일 삭제 + API_SPEC §부록 키움 legacy 삭제 + AddSymbolViewModel 주석 정리 + 키움 Keychain 항목(kr.co.kiwoom.paragon.*) 정리 검토
 - 이전 plan 백업: SPRINT_PLAN-2026-06-02.md (refresh-recovery, done)
 - 요구사항 SSOT: git docs/API_SPEC.md §[3] 이식 체크리스트 7항 + §실측 확정. 태스크 정의 SSOT: Vault prd/kis-migration/tasks.md (T0~T10 + V-*).
 - closeout 체크리스트: ① API_SPEC §부록 키움 legacy 삭제 (reviewer 메모 — affects 등재, 이식 완료 시점) ② CHANGELOG required ③ release closeout required ④ main 머지
@@ -82,7 +85,7 @@
 - 의존: task-5
 - 시도: 1
 - 산출물: docs/sprints/kis-migration-task-6-qa.md (제품 코드 수정 0건)
-- commit: (미정)
+- commit: 49a1d48 (sprint docs — Meta done 마킹 포함)
 
 ## 라이브/수동 검증 (자동 루프 밖 — 오너 게이트)
 
