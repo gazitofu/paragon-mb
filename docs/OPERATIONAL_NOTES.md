@@ -11,6 +11,7 @@
 
 ## 주의사항
 
+- [2026-06-04] KISWebSocketClient(신규, T7+T8) — actor + Event enum(시그니처 불변) + approvalKeyProvider 주입 + H0STCNT0 approval envelope(tr_type "1"=구독/"2"=해지) + PINGPONG echo + raw flag|tr_id|건수|본문 분기 + KISQuoteParser.parseExecutionChunked 위임 + 지수 백오프 재연결(2·4·8·16·30s 상한). setSubscriptions는 추가/제거 diff를 각각 별도 envelope으로 송신. connect마다 approvalKeyProvider 1콜(캐시 불요). swift test 83/83 PASS 회귀 0. (developer)
 - [2026-06-04] KISQuoteParser(신규) — parseExecutionChunked(46×N 청킹), parseRecord([0]~[5] signed 직접+sign 검증), parseStockInfo(CTPF1002R), parsePrice(FHKST01010100), parseSignedInt/Double. KISRESTClient.lookupPrice 숫자 파싱 KISQuoteParser.parseSignedInt 수렴(R1). QuoteParsingTests에 KISQuoteParserTests 18케이스 추가(기존 Kiwoom 단언 보존). swift test 83/83 PASS 회귀 0. (developer)
 - [2026-06-04] KISRESTClient(신규) — ThrottleQueue actor(600ms 직렬 가드) + issueToken(tokenP `appsecret`) + issueApprovalKey(Approval `secretkey`) + lookupName(CTPF1002R `prdt_abrv_name` trim) + lookupPrice(FHKST01010100 `stck_sdpr` → Quote.previousClose, prdy_vrss signed 직접). swift test 46/46 PASS 회귀 0, 기존 테스트 무수정. (developer)
 - [2026-06-04] KISEnvironment(신규)·KISCredential(KeychainStore 추가) — KiwoomEnvironment/KiwoomCredential과 병존. AppDelegate는 Task 10(조립 루트)에서 KIS로 전환 전까지 Kiwoom 식별자 유지. swift test 46 Suite passed, 회귀 0. (developer)
