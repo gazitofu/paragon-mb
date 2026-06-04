@@ -38,8 +38,29 @@
 | `stck_sdpr` | 기준가(=전일종가, 원) | `"360500"` | WS 역산 전일종가와 일치(3중 교차검증) |
 | `stck_shrn_iscd` | 종목코드 | `"005930"` | 6자리 순수(A접두 없음) |
 
-- ⚠️ **종목명 미포함** — 키움 ka10001과 달리 inquire-price 응답에 종목명 필드가 없다(`bstp_kor_isnm`은 업종명, `rprs_mrkt_kor_name`은 시장명). **watchlist 등록 시 종목명 확보 경로 🔴 미확정** — 후보: 상품기본조회 류 TR(search-stock-info 계열) 또는 KRX 마스터 파일. **[3] 이식 전 PoC 실측 필수.**
+- ⚠️ **종목명 미포함** — 키움 ka10001과 달리 inquire-price 응답에 종목명 필드가 없다(`bstp_kor_isnm`은 업종명, `rprs_mrkt_kor_name`은 시장명). → **✅ 해소: 주식기본조회 `CTPF1002R`로 확보**(아래 §종목명 조회).
 - 기타 가용 필드(참고, v1 미사용): `stck_oprc`(시가)·`stck_hgpr`(고가)·`stck_lwpr`(저가)·`acml_vol`(누적거래량)·`acml_tr_pbmn`(누적거래대금)·`wghn_avrg_stck_prc`(가중평균가)·`aspr_unit`(호가단위, 005930=500)·`per`/`pbr`/`eps`/`bps` 등 약 80필드.
+
+### 종목명 조회 REST — `CTPF1002R` (주식기본조회 [v1_국내주식-067]) — 2026-06-04 실측 ✅
+
+> watchlist 등록 플로우(코드 입력 → 종목명 표시)용. inquire-price의 종목명 부재 갭 해소. 출처: 공식 GitHub 샘플(1차) + `tools/kis-name-poc.swift` 실측(005930 주식 + 069500 ETF 2/2).
+
+- `GET /uapi/domestic-stock/v1/quotations/search-stock-info`
+- headers: inquire-price와 동일 패턴(`authorization` Bearer · `appkey` · `appsecret` · `tr_id: CTPF1002R` · `custtype: P`)
+- query: `PRDT_TYPE_CD=300`(주식·ETF·ETN·ELW 공통 — ETF도 동일 값으로 조회됨 실측) · `PDNO={6자리 종목코드}`
+- 응답: `rt_cd:"0"` · `msg_cd:"KIOK0530"` · `output{...}` (⚠️ `msg1`은 trailing 공백 패딩 — trim 필요)
+
+**v1 사용 필드** (실측):
+
+| 필드 | 의미 | 실측값(005930 / 069500) | 비고 |
+|---|---|---|---|
+| `prdt_abrv_name` | 상품약어명 — **앱 표시명** | `"삼성전자"` / `"KODEX 200"` | 키움 `stk_nm` 동등. `prdt_name`(정식명: "삼성전자보통주"·긴 펀드명)은 표시 부적합 |
+| `pdno` | 상품번호 | `"00000A005930"` | ⚠️ **요청은 6자리, 응답은 12자리 zero-pad+A접두** — 코드 키로 쓰려면 suffix 6자리 추출 또는 입력 코드 그대로 사용 |
+| `std_pdno` | 표준코드(ISIN) | `"KR7005930003"` | v1 미사용 |
+| `bfdy_clpr` | 전일종가 | `"360500"` | `stck_sdpr`와 일치(교차검증) — 등록 시 초기 시세에 활용 가능 |
+
+- 미존재/잘못된 코드 응답 형태 🟡 미실측 — 등록 실패 분기 구현 시 실측(예상: `rt_cd != "0"` 또는 빈 `output`).
+- ⚠️ **REST 연속 호출 제한 실측: `EGW00201` "초당 거래건수를 초과하였습니다"** — search-stock-info 직후 연속 호출(간격 ~0ms)에서 HTTP 500 + EGW00201 발생, **600ms 간격으로 회피 확인**. 정확한 초당 한도는 🟡 미확정. → 앱 REST 클라이언트에 호출 간 최소 간격(또는 직렬 큐 스로틀) 필요.
 
 ### WS 실시간 체결 — `H0STCNT0` (2026-06-04 장중 09:23 KST 실측 ✅)
 
@@ -92,13 +113,14 @@
 2. **TokenManager**: 발급 호출만 tokenP로 교체(actor 구조 유지). 분당 1회 제한 → 캐시 + 재발급 margin. 만료 = `expires_in` 또는 `access_token_token_expired` 파싱.
 3. **WS 클라이언트**: approval_key 발급 단계 추가 → 구독 envelope 교체 → PINGPONG echo → **46필드 청킹 파서**(멀티 레코드 번들 처리 필수).
 4. **파서 재작성**: `KiwoomQuoteParser` → KIS 파서. signed 값 직접 파싱 + sign 필드 검증용. `QuoteParsingTests` KIS 기준 재잠금(Units & Signs Audit).
-5. **🔴 종목명 확보 경로 확정** — inquire-price에 종목명 없음. 등록 플로우(코드 입력→이름 표시) 설계 의존. PoC 실측 후 본 문서 갱신.
+5. **✅ 종목명 확보 = `CTPF1002R`**(§종목명 조회) — 등록 플로우: 코드 입력 → search-stock-info(`prdt_abrv_name`) + inquire-price(초기 시세) 2콜, **사이 간격 600ms+ 스로틀**(EGW00201 실측).
 6. 자격증명: 앱 로드 정책 결정(env 직접 vs Keychain 정석 — 보안·휴대성 트레이드오프, `decisions/2026-06-03-kis-credentials-from-env.md` §앱 본체).
+7. **REST 스로틀**: 연속 호출 EGW00201 실측(§종목명 조회) — REST 클라이언트에 호출 간 최소 간격 또는 직렬 큐.
 
 ### 미실측/미확정 잔여
 
-- 🔴 종목명 조회 TR(위 5번).
 - 🟡 REST `prdy_vrss` 하락 표현(다음 하락 시점 실측 1건이면 종결).
+- 🟡 REST 초당 호출 한도 정확값(EGW00201 회피 간격 600ms만 실측) + 미존재 종목코드 응답 형태.
 - 🟡 WS 동시 등록 한도(커뮤니티 41건 설) — 다종목 구독 시 실측.
 - 🟡 모의(VTS) 도메인 전 흐름 — 실전 검증 완료라 v1 불요.
 - 🟡 토큰 만료/401·EGW 오류 응답 형태 — 이식 후 에러 분기 시 실측.

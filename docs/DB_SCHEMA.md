@@ -35,7 +35,7 @@
 | version | Int | 스키마 버전 | 현재 1. 증가 시 마이그레이션 |
 | symbols | Array | 관심종목 목록(순서 = 표시 순서) | 최대 `Policy.maxWatchlistCount`(현재 20). 한도 검사는 도메인 로직 |
 | symbols[].code | String | 종목코드 6자리 | unique(중복 등록 차단). 등록 시 시세 REST(KIS `inquire-price`)로 유효성 검증 |
-| symbols[].name | String | 종목명(REST 조회로 자동 채움) | 등록 시점 캐시. 표시용. ⚠️ KIS `inquire-price`는 종목명 미반환 — 확보 경로 🔴 미확정(`API_SPEC.md` §[3] 체크리스트 5) |
+| symbols[].name | String | 종목명(REST 조회로 자동 채움) | 등록 시점 캐시. 표시용. KIS는 `inquire-price`가 종목명 미반환 → 주식기본조회 `CTPF1002R`의 `prdt_abrv_name` 사용(2026-06-04 실측, `API_SPEC.md` §종목명 조회) |
 
 - **시세 값(현재가·등락액·등락률·기준종가)은 영속하지 않는다** — 휘발성 런타임 상태(REST 초기값 + WS 갱신)로만 보유. 재실행 시 코드로 재조회. 영속 대상은 종목코드+이름+순서뿐.
 - `name`은 등록 시 캐시이며 SSOT가 아니다. 재조회 시 최신값으로 갱신 가능(향후).
