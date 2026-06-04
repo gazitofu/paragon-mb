@@ -65,3 +65,11 @@ public enum KiwoomCredential {
     public static let appKey = "kr.co.kiwoom.paragon.appkey"
     public static let appSecret = "kr.co.kiwoom.paragon.appsecret"
 }
+
+/// KIS(한국투자증권) 자격증명 Keychain 서비스 식별자(SSOT).
+/// KiwoomCredential과 병존 — AppDelegate가 KISCredential로 전환(Task 10)까지 두 식별자 공존.
+/// CRUD 로직은 KeychainStore 메서드 공유(변경 없음).
+public enum KISCredential {
+    public static let appKey = "kr.co.koreainvestment.paragon.appkey"
+    public static let appSecret = "kr.co.koreainvestment.paragon.appsecret"
+}
