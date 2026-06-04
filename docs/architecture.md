@@ -1,5 +1,6 @@
 # Architecture — PARAGON-MB
 
+> 갱신: 2026-06-04 (`/team-dev:architect-design`, 기능 `kis-migration` — provider 전면 교체 사전 갱신). 근거: `Vault/appdev/PARAGON-MB/prd/kis-migration/{proposal.md, design.md}` + `docs/API_SPEC.md §[3] watchlist-realtime KIS 이식 체크리스트`(2026-06-04 KIS 실측 재작성) + `decisions/2026-05-30-migrate-kiwoom-to-kis.md`. 큰 변경(Network 3 클래스 + 파서 재작성 + auth 접점 TokenManager fetcher·approval_key·Keychain 식별자 + ATS Info.plist) 사전 갱신. **상세는 §KIS 이식.**
 > 갱신: 2026-05-29 (`/team-dev:architect-design`, 기능 `holdings-pnl` 두 번째 슬라이스 — §보유종목 슬라이스 추가). 근거: `Vault/appdev/PARAGON-MB/prd/holdings-pnl/{proposal.md, design.md}` + `decisions/2026-05-29-holdings-pnl-display-policy.md`(결정 A 단순 평가손익식). 큰 변경(실계좌 잔고 인증 축 + 신규 도메인·store·계산 lib·뷰) 사전 갱신.
 > 갱신: 2026-05-28 (`/team-dev:architect-design`, 기능 `watchlist-realtime` 첫 슬라이스 기준).
 > 근거: `Vault/appdev/PARAGON-MB/prd/watchlist-realtime/{proposal.md, design.md}`. Approaches ② 하이브리드(WebSocket 채택, 슬롯 예산·멀티계좌 추상화는 이연) 사용자 확정.
@@ -7,7 +8,7 @@
 
 ## 개요
 
-macOS 메뉴바 상주 앱. AppKit `NSStatusItem`+`NSPopover` 단일 팝오버 패널이 전체 UI이며, 팝오버 콘텐츠는 `NSHostingController`로 SwiftUI 패널(PanelRootView)을 호스팅한다. 키움 REST/WebSocket을 직접 호출해 관심종목 시세를 표시한다. **조회 전용 — 주문 기능 없음.** 분리형 `NSWindow` 대시보드는 v1에서 도입하지 않는다(팝오버 단일로 충분).
+macOS 메뉴바 상주 앱. AppKit `NSStatusItem`+`NSPopover` 단일 팝오버 패널이 전체 UI이며, 팝오버 콘텐츠는 `NSHostingController`로 SwiftUI 패널(PanelRootView)을 호스팅한다. **한국투자증권(KIS) Open API** REST/WebSocket을 직접 호출해 관심종목 시세를 표시한다(키움 → KIS 전환, 2026-05-30 결정 — 키움 지정단말기(8050) 제약으로 외부망 토큰 발급 거부 → KIS appkey/secret IP 비종속 구조로 교체. §KIS 이식). **조회 전용 — 주문 기능 없음.** 분리형 `NSWindow` 대시보드는 v1에서 도입하지 않는다(팝오버 단일로 충분).
 
 첫 Swift 프로젝트라는 학습 맥락을 고려해 표준적이고 과하지 않은 4-레이어 구조를 채택한다. 보유종목·지수 등 미래 슬라이스의 확장 골격(구독 매니저·슬롯 예산기·모의/실계좌 전환 계층)은 **선제 구축하지 않는다**(과설계 방지) — 단, 그 자리에 끼워 넣을 수 있도록 경계만 명확히 둔다(§하이브리드 추상화 경계).
 
@@ -153,6 +154,37 @@ PARAGON-MB/
 
 보유 구성(코드·수량·평단·매입금액)은 저빈도 REST 잔고(폴링), 현재가는 고빈도 WS(`QuoteService.updates` 공유 스트림). `HoldingsViewModel`이 두 소스를 `HoldingPnL`에 넣어 매 틱 재계산. 잔고 응답의 `cur_prc`는 WS 도착 전 초기 현재가로만 사용(이후 WS 우선). 장 외에는 WS off·마지막 종가 유지(첫 슬라이스 장상태 규칙 계승).
 
+## KIS 이식 (kis-migration, 2026-06-04 — 큰 변경 사전 갱신)
+
+키움 → 한국투자증권(KIS) Open API **프로바이더 전면 교체**. 동인: 키움 지정단말기(8050) 제약으로 외부망 토큰 발급 거부(2026-05-30 실측) → "어디서든 메뉴바 시세"가 깨짐. KIS는 appkey/secret IP 비종속이라 외부망 200 PoC 확인(2026-06-04). 이식은 **기능 추가가 아니라 레이어 교체** — Network/Auth/파서/조립(AppDelegate)/Info.plist만 변경, UI/도메인(`ViewModel`·`View`·`Quote`·`PriceDirection`·`MarketClock`·`DesignTokens`) **무변경**. 요구사항 정확값 SSOT = `docs/API_SPEC.md §[3]` + §실측 확정.
+
+### 결정 (Approach ① 최소 실행 — provider 추상화 미도입)
+
+- **파일 단위 치환**: `Kiwoom{Environment,RESTClient,WebSocketClient}`·`KiwoomQuoteParser`·`KiwoomCredential` → `KIS*`/`KISCredential`. `QuoteProvider` 프로토콜 추상화 **미도입**(키움 폐기 확정 — 두 번째 provider 부재 → premature). 가역성은 git revert로(개인용 단일 사용자). 키움 legacy는 검증 완료 후 별도 정리(API_SPEC §부록도 동시 삭제).
+- **외부 계약 불변**: `QuoteServicing`(`start`/`updateWatchlist`/`stop`/`updates`)·`KISWebSocketClient.Event`(connected/disconnected/quote)·`TokenManager.Token`·`Quote(price:previousClose:)`·`Symbol`·`symbolLookup:(String)->Symbol` 시그니처 전부 불변 → `WatchlistViewModel`·`AddSymbolViewModel`·모든 View **무영향**. 전파는 `QuoteService` init 타입 참조 + `AppDelegate` 조립 루트 2곳으로 한정.
+
+### KIS 와이어 흡수 (파서가 경계 — 와이어 포맷 ViewModel 누출 금지)
+
+- **WS H0STCNT0**: `ws://ops.koreainvestment.com:21000`(평문) → approval_key envelope 구독 → raw `flag|tr_id|건수N|본문`(`^` 구분) → **본문 46×N 청킹**(멀티 레코드 번들) → per-record [0]code [1]time [2]price [3]sign [4]signed change [5]signed rate. PINGPONG echo keep-alive(~10s). 청킹 누락 시 2번째 틱부터 붕괴 — `QuoteParsingTests` 게이트.
+- **부호·스케일 SSOT = `KISQuoteParser` 한 곳**: 가격(원 정수, 스케일 없음)·등락(**signed 직접 파싱**)·`previousClose=price−change` 역산. [3]sign 필드(2=상승·5=하락)는 **검증 보조 전용**(부호 재구성에 미사용) — signed와 모순 시 signed 채택. WS(signed 실측 확정)·REST `prdy_vrss`(하락 부호 P5 미실측) 양쪽 안전(P5 비-blocking, 다음 하락 실측으로 종결).
+
+### Auth (TokenManager 로직 불변 — 발급 경로만 교체)
+
+- **TokenManager actor 무변경**(`validToken`/캐시/margin 300s/`invalidate`) → `TokenManagerTests` 무변경 통과 = 회귀 0 증명. 교체는 fetcher 클로저(AppDelegate)만 — `POST /oauth2/tokenP`(body key `appsecret`). 만료 = `expires_in`(86400) 우선·`access_token_token_expired`(KST) 폴백. 분당 1회 재발급은 캐시+margin이 충족.
+- **approval_key = WS 전용 별도 발급**: `POST /oauth2/Approval`(body key `secretkey` ≠ tokenP `appsecret`, 실측). WS 클라이언트가 connect마다 발급(캐시 불요). REST 토큰과 공유 안 함.
+- **REST 스로틀**: EGW00201("초당 거래건수 초과") 회피 — REST actor 직렬 큐 + 호출 간 최소 600ms(보수 마진). 등록 2콜(`CTPF1002R`→inquire-price) 전역 적용.
+- **자격증명 로드 = Keychain 정석**: 앱 본체는 `kr.co.koreainvestment.paragon.*`만 읽음(env 직접 읽기 0, Floor 4). env 파일은 PoC 도구 전용.
+- **auth/credential 로직 숨김 금지(Floor 4)**: 자격증명·토큰·approval_key는 Auth 레이어 + AppDelegate 조립 루트에만(config/helper 숨김 금지). ATS 예외는 전송 정책이라 Info.plist가 정석.
+
+### 종목 등록 2콜 분리
+
+inquire-price에 종목명 부재 → 등록은 2콜: `CTPF1002R`(`prdt_abrv_name`, trailing trim) → `Symbol` emit(`symbolLookup` 클로저), 초기 시세는 parent `commitAdd`→`QuoteService.loadInitial`(`FHKST01010100`)이 담당. `symbolLookup` 시그니처 불변(`->Symbol`) → `AddSymbolViewModel` 무변경. 600ms 스로틀은 REST actor 전역 큐가 보장.
+
+### deferred (이식 비-blocking, 후속 종결)
+
+- auth-failed 배너 KIS 에러코드 분기 — MVP 제외(별도 후속 트랙). 현재 throw → `authFailed` 단일 문구.
+- P5(REST 하락 부호)·P6(미존재 코드·토큰 만료·EGW 응답 형태)·P7(WS 동시 등록 한도) — 라이브 검증으로 종결. 관측 KIS 에러는 ops 노트 수집.
+
 ## 관심종목 한도 정책 (수치 하드의존 금지)
 
 Premise #3(~40슬롯 한도, 2차 출처 🟡)은 미검증이므로 `Policy.maxWatchlistCount` 단일 상수로 분리한다(현재 값 20). 키 발급 후 실측으로 한도가 달라지면 이 상수 한 줄만 수정 → 정책 재조정. 비즈니스 로직·뷰는 상수를 참조할 뿐 숫자를 박지 않는다.
@@ -163,9 +195,9 @@ Premise #3(~40슬롯 한도, 2차 출처 🟡)은 미검증이므로 `Policy.max
 
 ## 보안
 
-- appkey/secret/access token은 macOS Keychain(`kSecClassGenericPassword`)에만 저장. 메모리 외 평문 흔적 없음.
+- appkey/secret/access token은 macOS Keychain(`kSecClassGenericPassword`)에만 저장. 메모리 외 평문 흔적 없음. **자격증명 식별자 = `kr.co.koreainvestment.paragon.{appkey,appsecret}`(account=`paragon`)** — kis-migration에서 `kr.co.kiwoom.paragon.*`에서 교체(앱 본체는 Keychain만 읽음, env 직접 읽기 0).
 - `.gitignore`로 자격증명·빌드 산출물 제외(이미 처리).
-- App Transport Security: 키움 도메인 HTTPS/WSS 전용.
+- App Transport Security: KIS REST는 HTTPS(`openapi.koreainvestment.com:9443`). **WS는 평문 ws 전용**(`ws://ops.koreainvestment.com:21000` — wss는 TLS -1200 실패, KIS 정책) → Info.plist `NSExceptionDomains`에 `ops.koreainvestment.com` 평문 예외(`NSExceptionAllowsInsecureHTTPLoads`). 전송 정책 예외이며 auth/검증 로직 아님(§KIS 이식).
 
 ## 미해결 / sprint 전 사용자 액션
 
