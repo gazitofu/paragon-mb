@@ -11,6 +11,7 @@
 
 ## 주의사항
 
+- [2026-06-04] KISRESTClient(신규) — ThrottleQueue actor(600ms 직렬 가드) + issueToken(tokenP `appsecret`) + issueApprovalKey(Approval `secretkey`) + lookupName(CTPF1002R `prdt_abrv_name` trim) + lookupPrice(FHKST01010100 `stck_sdpr` → Quote.previousClose, prdy_vrss signed 직접). swift test 46/46 PASS 회귀 0, 기존 테스트 무수정. (developer)
 - [2026-06-04] KISEnvironment(신규)·KISCredential(KeychainStore 추가) — KiwoomEnvironment/KiwoomCredential과 병존. AppDelegate는 Task 10(조립 루트)에서 KIS로 전환 전까지 Kiwoom 식별자 유지. swift test 46 Suite passed, 회귀 0. (developer)
 
 - [2026-06-01] NWPath.Status를 직접 주입하는 테스트 패턴: NetworkPathReachability는 handleStatusUpdate(_:) 내부 메서드를 @testable import로 노출해 NWPathMonitor 실물 없이 결정론적 단위 테스트 가능. Swift 6 모드에서 @Sendable 클로저 내 var 캡처는 warning이나 Swift 5.9(Package.swift swift-tools-version:5.9)에서는 에러 아님. (developer)
