@@ -1,6 +1,7 @@
 # Data / Storage Schema — PARAGON-MB
 
-> 갱신: 2026-05-28 (`/team-dev:architect-design`, 기능 `watchlist-realtime`).
+> 갱신: 2026-06-04 (KIS 전환 [2] — provider 전환 반영. 키움 → KIS 결정: `decisions/2026-05-30-migrate-kiwoom-to-kis.md`).
+> ⚠️ 앱 본체는 아직 키움 코드 경로([3] 이식 전) — KIS 항목은 목표 스펙.
 
 조회 전용 앱 — 서버 DB 없음. 로컬 영속만:
 
@@ -33,19 +34,21 @@
 |---|---|---|---|
 | version | Int | 스키마 버전 | 현재 1. 증가 시 마이그레이션 |
 | symbols | Array | 관심종목 목록(순서 = 표시 순서) | 최대 `Policy.maxWatchlistCount`(현재 20). 한도 검사는 도메인 로직 |
-| symbols[].code | String | 종목코드 6자리 | unique(중복 등록 차단). 등록 시 키움 REST로 유효성 검증 |
-| symbols[].name | String | 종목명(REST 조회로 자동 채움) | 등록 시점 캐시. 표시용 |
+| symbols[].code | String | 종목코드 6자리 | unique(중복 등록 차단). 등록 시 시세 REST(KIS `inquire-price`)로 유효성 검증 |
+| symbols[].name | String | 종목명(REST 조회로 자동 채움) | 등록 시점 캐시. 표시용. ⚠️ KIS `inquire-price`는 종목명 미반환 — 확보 경로 🔴 미확정(`API_SPEC.md` §[3] 체크리스트 5) |
 
 - **시세 값(현재가·등락액·등락률·기준종가)은 영속하지 않는다** — 휘발성 런타임 상태(REST 초기값 + WS 갱신)로만 보유. 재실행 시 코드로 재조회. 영속 대상은 종목코드+이름+순서뿐.
 - `name`은 등록 시 캐시이며 SSOT가 아니다. 재조회 시 최신값으로 갱신 가능(향후).
 
-## 보유종목 스냅샷 — 휘발성(영속 안 함, holdings-pnl 2026-05-29)
+## ⏸️ 보유종목 스냅샷 — 보류 (KIS 전환 + 시세 전용 scope, 2026-06-01)
 
-보유종목은 **디스크 영속 대상이 아니다**(watchlist JSON과 대비). 실계좌가 SSOT이며, 앱은 키움 잔고 REST(kt00018)를 주기 조회해 런타임 메모리에만 보유한다. 재실행 시 잔고 재조회로 복원.
+> **KIS = 시세 전용 scope 확정으로 holdings-pnl 보류** — 아래는 키움 kt00018 기준 설계로, 재개 시 KIS 잔고 TR 실측 후 필드 출처를 재도출한다(`API_SPEC.md` §보류). 모델 형태·휘발성 원칙·결정 A 산식은 provider 무관 생존.
 
-| 모델 | 필드 | 출처 | 비고 |
+보유종목은 **디스크 영속 대상이 아니다**(watchlist JSON과 대비). 실계좌가 SSOT이며, 앱은 잔고 REST를 주기 조회해 런타임 메모리에만 보유한다. 재실행 시 잔고 재조회로 복원.
+
+| 모델 | 필드 | 출처(키움 legacy — KIS 재도출 대상) | 비고 |
 |---|---|---|---|
-| `Holding`(PMCore/Domain) | `code`(정규형 6자리) | 잔고 `stk_cd` → `SymbolCode.normalize6` | "A" 접두 제거 |
+| `Holding`(PMCore/Domain) | `code`(정규형 6자리) | 잔고 `stk_cd` → `SymbolCode.normalize6` | 키움 "A" 접두 제거 (KIS 시세는 6자리 순수 — 잔고 TR 형식은 미실측) |
 | | `name` | 잔고 `stk_nm` | |
 | | `quantity`(주, Int) | 잔고 `rmnd_qty` | |
 | | `purchasePrice`(원, Int) | 잔고 `pur_pric` | 매입단가(표시용 반올림) — 종목별 손익 계산 기준 |
@@ -54,17 +57,18 @@
 - 현재가(`cur_prc`)는 `Holding`에 넣지 않는다 — WS 가격 캐시(`HoldingsViewModel.quotes`) 경유(잔고 `cur_prc`는 WS 도착 전 초기값으로만).
 - 키움 `evltv_prft·sum_cmsn·tax·prft_rt`는 저장·사용하지 않는다(결정 A — 단순식 자체 계산).
 
-## 자격증명 — macOS Keychain
+## 자격증명
 
 | 항목 | 값 |
 |---|---|
-| 클래스 | `kSecClassGenericPassword` |
-| 서비스 식별자 | 예: `com.paragon-mb.kiwoom`(앱 번들 ID 기반) |
-| 저장 항목 | appkey, secretkey, access token(+만료 시각) |
+| KIS Keychain 서비스 | `kr.co.koreainvestment.paragon.{appkey,appsecret}` (`kSecClassGenericPassword`) |
+| KIS env 파일(tools 한정) | `~/.config/secrets/api.env`의 `KIS_APP_KEY`/`KIS_APP_SECRET` (override=`PARAGON_SECRETS_ENV`) — PoC 도구는 **env 우선 → Keychain 폴백**(결정 `decisions/2026-06-03-kis-credentials-from-env.md`) |
+| 키움 Keychain(legacy) | `kr.co.kiwoom.paragon.{appkey,appsecret}` — 현행 앱 본체(`KeychainStore`)가 읽는 경로. [3] 이식 시 KIS로 교체 |
+| 앱 본체 로드 정책 | **[3]에서 결정** — env 직접 읽기는 평문 보안 약화·절대경로 비휴대성 리스크(앱은 Keychain 정석 권장) |
 | 소유 | `PMCore/Auth/KeychainStore` |
-| 평문 금지 | 파일·UserDefaults 평문 저장 흔적 없음(Premise #7). QA로 검증 |
+| 평문 금지 | git·UserDefaults·로그 평문 저장 금지(Premise #7). env 파일은 사용자 관리 영역(`~/.config/secrets/`, git 밖) |
 
-- access token은 Keychain 보관 또는 메모리 보관 중 택 — 만료 시각과 함께. 재발급으로 갱신. **secret·token은 로그·git·평문 어디에도 남기지 않는다.**
+- access token은 메모리 보관(만료 시각과 함께, TokenManager actor). 재발급으로 갱신. **secret·token은 로그·git 어디에도 남기지 않는다.**
 
 ## 마이그레이션
 

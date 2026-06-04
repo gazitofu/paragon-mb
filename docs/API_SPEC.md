@@ -1,124 +1,128 @@
 # API Spec — PARAGON-MB
 
-> 갱신: 2026-05-28 (`/team-dev:architect-design`, 기능 `watchlist-realtime`).
-> **출처 등급 주의**: 아래 엔드포인트·필드·프로토콜 상세는 공식 포털 본문 미확보로 대부분 2차 출처(🟡) 또는 미확인(🔴)이었다. **2026-05-29 실측으로 핵심 항목 확정** — 아래 §실측 확정이 SSOT이며 하단 🟡/🔴 추정 표를 갱신한다.
+> 갱신: 2026-06-04 (KIS 전환 [2] 필드 실측 완료 — 문서를 KIS 기준으로 재작성).
+> **Provider = 한국투자증권(KIS) Open API** — 키움 완전 대체 결정(`Vault/.../decisions/2026-05-30-migrate-kiwoom-to-kis.md`).
+> **Scope = 시세 전용** (사용자 확정 2026-06-01) — 계좌/잔고 TR 보류, holdings-pnl 재개 시 재검토.
+> ⚠️ **앱 본체는 아직 키움 코드 경로** — 본 문서 KIS 스펙은 전환 체크리스트 [3](watchlist-realtime KIS 이식)의 목표 스펙이다. 현행 앱이 의존하는 키움 스펙은 §부록(legacy) 참조.
 
-## ✅ 실측 확정 (2026-05-29 PoC)
+## ✅ KIS 실측 확정 (2026-06-03~04 PoC)
 
-키 발급 후 `tools/kiwoom-ws-poc.swift` + `tools/kiwoom-rest-lookup-poc.swift`로 실측. .NET 래퍼의 `mockapi.kiwoom.com`은 **outdated** — 정정.
+도구: `tools/kis-auth-poc.swift`(REST 3종) + `tools/kis-ws-poc.swift`(WS 체결). 전부 실전 도메인·외부망에서 HTTP 200 — **지정단말기(8050)류 IP 제약 부재 최종 확인**(전환 핵심 가설 ✅).
+
+### 인증
 
 | 항목 | 실측 확정값 | 비고 |
 |---|---|---|
-| REST baseURL | 실전 `https://api.kiwoom.com` / 모의 `https://api.kiwoom.com:9443` | 모의 구분은 토큰에 내재 |
-| 토큰 발급 | `POST /oauth2/token` body `{grant_type:client_credentials, appkey, secretkey}` → `{token, expires_dt, return_code}` | `expires_dt` = KST `yyyyMMddHHmmss`, 24h |
-| WS | `wss://api.kiwoom.com:10000/api/dostk/websocket` (실전·모의 공통) | LOGIN→REG(`grp_no`/`refresh`/`data[item,type=0B]`)→PING echo→REAL |
-| WS 0B FID | 10 현재가(부호=방향·abs) / 11 전일대비(부호) / 12 등락률% / 13 누적거래량 / 15 체결량 / 16·17·18 시·고·저 / 20 체결시각 / 27·28 최우선 매도·매수호가 | 가격 **원 단위, 스케일 없음**(사용자 확인 2026-05-29) |
-| 종목조회 | `POST /api/dostk/stkinfo` header `api-id: ka10001` + `authorization: Bearer {token}`, body `{stk_cd}` | 응답 `stk_nm`·`cur_prc`(부호)·`base_pric`(전일종가)·`pred_pre`·`flu_rt`(%) |
-| **Premise #1** 표준 키 WS 체결 수신 | **✅ TRUE** — 005930 실시간 0B 수신 | 별도 신청·요금 없이 수신 확인 |
-| 부호·스케일 잠금 | `KiwoomQuoteParser`(parseRealtimeExecution·parseStockInfo) + `QuoteParsingTests` | price=abs · change 부호 보존 · prevClose=base_pric(REST) 또는 price−change(WS) |
+| REST base(실전) | `https://openapi.koreainvestment.com:9443` | 모의 `openapivts:29443`은 🟡 미실측 |
+| 토큰 발급 | `POST /oauth2/tokenP` body `{grant_type:"client_credentials", appkey, appsecret}` | JSON body. 키움(`/oauth2/token`·`secretkey`)과 경로·키 이름 다름 |
+| 토큰 응답 | `access_token`(JWT 346자) · `token_type:"Bearer"` · `expires_in:86400`(=24h) · `access_token_token_expired:"YYYY-MM-DD HH:mm:ss"`(KST) | 2026-06-04 실측: `2026-06-05 09:36:42` 정확히 24h |
+| 재발급 제한 | **분당 1회**(공식 고지) — 위반 시 EGW 오류 | TokenManager 토큰 캐시 필수. 만료 임박/401 시만 재발급 |
+| WS 접속키 | `POST /oauth2/Approval` body `{grant_type:"client_credentials", appkey, **secretkey**}` → `approval_key`(36자) | ⚠️ body 키가 `appsecret` 아닌 `secretkey` — tokenP와 다름(실측). 호출마다 새 키 발급, 별도 제한 미관측 |
+| 자격증명 로드(tools) | env 파일(`~/.config/secrets/api.env`의 `KIS_APP_KEY`/`KIS_APP_SECRET`, override=`PARAGON_SECRETS_ENV`) 우선 → Keychain `kr.co.koreainvestment.paragon.{appkey,appsecret}` 폴백 | 결정 `decisions/2026-06-03-kis-credentials-from-env.md`. **앱 본체 로드 정책은 [3]에서 결정**(평문 env 보안 리스크 — 앱은 Keychain 정석 권장) |
 
-> ⏳ 미실측 잔여: Premise #2(모의환경 실시간), #3(슬롯 한도), WS 구독해제(REMOVE) 정확 동작 — 모의 토큰·다종목 구독 시 추가 확인.
+### 현재가 REST — `FHKST01010100` (주식현재가 시세)
 
-## 외부 API
-- **키움 REST API** (openapi.kiwoom.com): OAuth 토큰 발급, 시세 조회, 계좌 잔고(보유종목·평가손익)
-- **키움 WebSocket**: 실시간 체결/시세 구독
-- (보조) KRX OpenAPI: 종목 마스터/지연 데이터 — 실시간 불가(T+1)
+- `GET /uapi/domestic-stock/v1/quotations/inquire-price`
+- headers: `authorization: Bearer {token}` · `appkey` · `appsecret` · `tr_id: FHKST01010100` · `custtype: P`
+- query: `FID_COND_MRKT_DIV_CODE=J`(주식) · `FID_INPUT_ISCD={6자리 종목코드}`
+- 응답: `rt_cd:"0"`(성공) · `msg_cd:"MCA00000"` · `output{...}` — 전 필드 **plain 문자열, 원 단위 정수, 스케일·zero-padding 없음**
 
-## 검증 결과 (2026-05-28, contract 가설 4~6)
+**v1 사용 필드 화이트리스트** (2026-06-04 실측, 005930):
 
-> ⚠️ **출처 등급 = 2차(커뮤니티)**. 공식 포털(openapi.kiwoom.com)은 JS 렌더링으로 스펙 본문 미확보.
-> 아래는 .NET 래퍼([dongbin300/KiwoomRestApi.Net](https://github.com/dongbin300/KiwoomRestApi.Net)) + 블로그(pabburi) 기준.
-> **키 발급 후 실측 또는 공식 가이드로 확정 필요.**
-
-| 항목 | 검증 결과 | 출처 | 상태 |
+| 필드 | 의미 | 실측값 | 비고 |
 |---|---|---|---|
-| WebSocket 동시 실시간 등록 | **~40종목 / 인스턴스당 WS 1연결** (한투 41개와 유사) | .NET 래퍼 | 🟡 공식 확인 필요 |
-| 접근토큰 유효기간 | **24시간**, `POST /oauth2/token` @ api.kiwoom.com (`grant_type=client_credentials`) | .NET 래퍼·pabburi | 🟡 공식 확인 필요 |
-| 토큰 갱신 | 동일 호출 재발급 → 앱에 만료 전 자동 재발급 로직 | .NET 래퍼 | 🟡 |
-| 실시간 시세 별도 요금 | 공개 출처에 별도 과금 언급 없음 (표준 키로 실시간 체결 수신 가능해 보임) | 추론 | 🔴 미확인 |
-| 모의 vs 실계좌 | 모의투자 환경 존재(`isMock`). 보유종목/평가손익은 **실계좌 필수**(모의=가짜 잔고) | .NET 래퍼 | 🟡 |
+| `stck_prpr` | 현재가(원) | `"363500"` | |
+| `prdy_vrss` | 전일대비(원) | `"3000"` | 하락 시 음수 포함 여부 🟡(아래 §부호 규칙) |
+| `prdy_vrss_sign` | 전일대비부호 | `"2"` | 2=상승·5=하락 실측. 1상한/3보합/4하한 🟡 |
+| `prdy_ctrt` | 등락률(%) | `"0.83"` | plain decimal |
+| `stck_sdpr` | 기준가(=전일종가, 원) | `"360500"` | WS 역산 전일종가와 일치(3중 교차검증) |
+| `stck_shrn_iscd` | 종목코드 | `"005930"` | 6자리 순수(A접두 없음) |
 
-### 계좌평가잔고 (kt00018) — ✅ 실측 확정 (2026-05-29 PoC, `tools/kiwoom-balance-poc.swift`)
+- ⚠️ **종목명 미포함** — 키움 ka10001과 달리 inquire-price 응답에 종목명 필드가 없다(`bstp_kor_isnm`은 업종명, `rprs_mrkt_kor_name`은 시장명). **watchlist 등록 시 종목명 확보 경로 🔴 미확정** — 후보: 상품기본조회 류 TR(search-stock-info 계열) 또는 KRX 마스터 파일. **[3] 이식 전 PoC 실측 필수.**
+- 기타 가용 필드(참고, v1 미사용): `stck_oprc`(시가)·`stck_hgpr`(고가)·`stck_lwpr`(저가)·`acml_vol`(누적거래량)·`acml_tr_pbmn`(누적거래대금)·`wghn_avrg_stck_prc`(가중평균가)·`aspr_unit`(호가단위, 005930=500)·`per`/`pbr`/`eps`/`bps` 등 약 80필드.
 
-- 호출: `POST /api/dostk/acnt` header `api-id: kt00018` + `authorization: Bearer {token}` + `cont-yn: N` + `next-key: ""`, body `{qry_tp, dmst_stex_tp:"KRX"}` (`qry_tp` 1=합산/2=개별 추정 — 합산으로 보유리스트+합산 모두 수신 확인). 실계좌 토큰으로 HTTP 200·`return_code:0`. 시세 구독과 **동일 토큰 흐름**(Premise #1·#2 ✅).
-- 응답 보유리스트 키 = `acnt_evlt_remn_indv_tot`(배열). 종목별 필드(전부 **zero-padded 문자열, 원/주 단위 정수, 스케일 없음**):
+### WS 실시간 체결 — `H0STCNT0` (2026-06-04 장중 09:23 KST 실측 ✅)
 
-  | 필드 | 의미 | 비고 |
-  |---|---|---|
-  | `stk_cd` | 종목코드 | **"A" 접두**(예 `A085620`) — WS/시세는 6자리(`005930`)라 **접두 제거 필요** |
-  | `stk_nm` | 종목명 | |
-  | `rmnd_qty` | 보유수량(주) | |
-  | `pur_pric` | 매입단가(평단, 원) | `pur_amt/rmnd_qty` 반올림(절사) — **역산 금지, 표시용만** |
-  | `pur_amt` | 매입금액(원) | **authoritative**(합산·손익 기준선) |
-  | `cur_prc` | 현재가(원) | |
-  | `evlt_amt` | 평가금액(원) | = `rmnd_qty × cur_prc` |
-  | `evltv_prft` | 평가손익(원) | = `evlt_amt − pur_amt − sum_cmsn − tax` (**수수료+세금 차감**, 부호 보존) |
-  | `prft_rt` | 수익률(%) | = `evltv_prft / pur_amt × 100`, plain decimal 문자열(예 `-1.97`) |
-  | `pur_cmsn`·`sell_cmsn`·`sum_cmsn` | 매수·(추정)매도·합산 수수료(원) | 매도분은 현재가 기준 추정 → 가격 변동 시 변함 |
-  | `tax` | (추정)제세금(원) | 매도 거래세 등, 현재가 기준 추정 |
-  | `pred_close_pric` | 전일종가(원) | |
-  | `poss_rt` | 보유비중(%) | |
-  | `trde_able_qty` | 매매가능수량 | |
+| 항목 | 실측 확정값 |
+|---|---|
+| URL(실전) | `ws://ops.koreainvestment.com:21000` — **평문 ws 전용**(wss는 TLS -1200 실패). 모의 `:31000` 🟡 미실측 |
+| 구독 송신 | `{"header":{"approval_key","custtype":"P","tr_type":"1","content-type":"utf-8"},"body":{"input":{"tr_id":"H0STCNT0","tr_key":"{6자리}"}}}` |
+| 구독 응답 | JSON `{"header":{"tr_id":"H0STCNT0","tr_key","encrypt":"N"},"body":{"rt_cd":"0","msg_cd":"OPSP0000","msg1":"SUBSCRIBE SUCCESS"}}` — **encrypt:"N" = 체결가 평문, AES 복호 불필요** |
+| keep-alive | `tr_id:"PINGPONG"` JSON 약 10초 간격 — **동일 메시지 echo 회신**(미회신 시 절단 추정) |
+| 체결 raw 형식 | `암호화flag|tr_id|건수|본문` — flag `0`=평문, 본문은 `^` 구분 |
+| ★ 멀티 레코드 번들 | **`건수`=N이면 본문 = N틱 × 46필드 연결**(실측: 건수 011 → 총 506필드 = 46×11, 건수 009 메시지도 수신). **파서는 46필드 단위 청킹 필수** — 키움 0B(FID 키-값)와 전혀 다른 위치 기반 구조 |
 
-- 합산(top-level): `tot_evlt_amt`(총평가) / `tot_pur_amt`(총매입) / `tot_evlt_pl`(총평가손익) / `tot_prft_rt`(총수익률 %) / `prsm_dpst_aset_amt`(추정예탁자산). 합산은 종목별 합과 일치 실측 확인.
+**체결 raw 필드맵** (per-record 46필드, 실측 005930 `005930^092341^356000^5^-4500^-1.25^…`):
 
-> **⚠️ Premise #4·#5 핵심 발견 (손익 산식 불일치)**: PRD가 계획한 `보유수량 × (현재가 − 평단가)` = `evlt_amt − pur_amt`로, **키움 MTS 표기 `evltv_prft`와 수수료+세금만큼 어긋난다**(실측 3종목 전부 차액 = `sum_cmsn + tax`로 정확히 설명됨). 게다가 매도 수수료·세금은 **현재가 기준 추정치**라 WS로 현재가가 틱마다 변하면 정확 일치하려면 매도분 수수료·세금도 현재가 기준 재계산 필요. → **표시 정책 결정 필요**(아래 §제품/아키텍처 영향). `KiwoomBalanceParser` + `BalancePnLTests`로 잠금(Units & Signs).
-
-### 제품/아키텍처 영향
-- **실시간 ~40슬롯 한도**: 관심 + 보유 + 지수(코스피·코스닥)가 모두 슬롯 소비 → 합산 ~40 예산. `product-define`에서 "관심종목 최대 N개" 정책 + 화면 가시 종목만 구독하는 lazy-subscribe 설계 검토.
-- **토큰 24h 자동 재발급** + 자격증명 Keychain 보관(평문 금지).
-- 개발 전략: 첫 슬라이스(관심종목 시세)는 **모의 환경**, 보유종목 단계에서 실계좌 연결.
-- **보유종목 평가손익 표시 정책 (holdings-pnl) — ✅ 결정 A (2026-05-29, `Vault/.../decisions/2026-05-29-holdings-pnl-display-policy.md`)**: **단순 평가손익(실시간)** `rmnd_qty × (cur_prc − pur_pric)`(=`evlt_amt − pur_amt`), 수익률 = 손익/`pur_amt`×100. WS 현재가로 실시간 재계산. "수수료·세금 미포함" 캡션 병기. 키움 `evltv_prft`·`sum_cmsn`·`tax`·`prft_rt`는 v1 미사용(의도적 MTS 불일치). `BalancePnLTests`로 단순식 잠금. (대안 B 스냅샷/C 실시간 추정은 v2 토글 후순위.)
-- **종목코드 정규화**: 잔고 `stk_cd`는 "A" 접두(`A085620`), WS/시세는 6자리(`005930`). 보유↔관심 중복 구독 공유(슬롯 1회) 위해 **정규화 6자리 키로 통일** 필요.
-
-### holdings-pnl 앱 측 호출 윤곽 (2026-05-29, architect-design)
-
-- **`KiwoomRESTClient.fetchBalance(token:)`** (신규): `POST /api/dostk/acnt`, header `api-id: kt00018` + `authorization: Bearer {실계좌 token}` + `cont-yn: N` + `next-key: ""`, body `{qry_tp, dmst_stex_tp:"KRX"}`. 파싱은 격리 파서 `KiwoomBalanceParser.parse(json) -> [Holding]` 위임(실측 키 확정 시 한 곳만 수정).
-- **v1 사용 필드 화이트리스트(결정 A)**: 종목별 `stk_cd`(→`SymbolCode.normalize6`)·`stk_nm`·`rmnd_qty`·`pur_pric`·`pur_amt`·`cur_prc`(WS 도착 전 초기값)만 사용. **미사용**: `evltv_prft`·`sum_cmsn`·`tax`·`prft_rt`·합산 `tot_*`(앱이 단순식으로 자체 계산·합산). 키움 합산값은 검증용 참고만, 표시 안 함.
-- **손익 산식(결정 A, `HoldingPnL` lib·`BalancePnLTests` 잠금)**: 종목별 `rmnd_qty×(cur_prc−pur_pric)`(원 Int), 수익률 `손익/pur_amt×100`(%), 합산은 Σ개별. 키움 `evltv_prft`와 수수료+세금만큼 의도적 불일치 — "수수료·세금 미포함" 캡션 병기.
-- **모의/실계좌 가드(R3)**: 모의 토큰 잔고 호출은 거부/빈 응답 → 보유 탭 "실계좌 필요" 안내. 정확한 모의 판별 필드는 sprint PoC calibration 대상.
-
-## watchlist-realtime 연동 스펙 (2026-05-28, architect-design)
-
-> 아래는 본 기능 구현이 의존하는 호출 윤곽이다. 경로·필드명·페이로드 키는 2차 출처 추정이므로 **🟡/🔴 등급을 유지**한다. 실측 PoC에서 실제 값으로 교정한다.
-
-### 인증 — 토큰 발급/재발급
-
-| 항목 | 추정 스펙 | 출처 | 상태 |
+| index | 의미 | 실측값 | 교차검증 |
 |---|---|---|---|
-| 엔드포인트 | `POST https://api.kiwoom.com/oauth2/token` (모의: 모의 baseURL) | .NET 래퍼·pabburi | 🟡 |
-| 요청 | `grant_type=client_credentials`, `appkey`, `secretkey`(또는 `appsecret`) | .NET 래퍼 | 🟡 필드명 확인 필요 |
-| 응답 | access token + 만료(24h 추정) | .NET 래퍼 | 🟡 |
-| 재발급 | 동일 호출 재발급. 앱은 만료 임박 또는 401 시 갱신 | 추론 | 🟡 |
+| [0] | 종목코드(6자리) | `005930` | ✅ |
+| [1] | 체결시간 HHMMSS | `092341` | ✅ 실행 시각 일치 |
+| [2] | 현재가(원 정수) | `356000` | ✅ |
+| [3] | 전일대비부호 | `5`(하락) | ✅ REST sign 체계와 동일 |
+| [4] | 전일대비(원) — **signed** | `-4500` | ✅ 356000+4500=360500=`stck_sdpr` 일치 |
+| [5] | 등락률(%) — **signed** | `-1.25` | ✅ -4500/360500=-1.248% 산술 일치 |
+| [6] | 가중평균가 | `350683.11` | REST `wghn_avrg_stck_prc` 동일 계열 |
+| [7] | 시가 | `349000` | ✅ REST `stck_oprc` 일치 |
+| [8] | 고가 | `357000` | 시점상 정합(이후 364250까지 상승) |
+| [9] | 저가 | `348000` | ✅ REST `stck_lwpr` 일치 |
+| [10] | 매도호가1 | `356000` | 호가단위 500 정합 |
+| [11] | 매수호가1 | `355500` | 〃 |
+| [12] | 체결거래량(주) | `1` | |
+| [13] | 누적거래량(주) | `8026989` | ✅ 13분 뒤 REST `acml_vol` 9944273과 증가 정합 |
+| [14] | 누적거래대금(원) | `2814936279750` | REST `acml_tr_pbmn` 증가 정합 |
+| [24] | 시가 시간 HHMMSS | `090025` | 장 시작 직후 정합 |
 
-- 앱 측 흐름: `TokenManager`(actor)가 토큰 1개 + 만료 시각 보유 → 모든 REST/WS 호출 전 유효 토큰 주입 → 만료 임박/401 시 재발급. 재발급 실패는 사용자 가시 에러로 표면화(앱 재시작 안내, v1).
-- 자격증명은 Keychain에서 로드. 평문 파일 금지.
+- v1 파서 사용 = **[0][1][2][3][4][5]**(+필요 시 [13]). 나머지 index는 공식 H0STCNT0 명세 대조로 보충 가능(시세 전용 v1엔 불요).
+- ★ **부호 규칙(Units & Signs Audit 대상)**: WS는 [4][5]에 **음수 부호가 값에 직접 포함**(부호필드 [3]과 중복 제공). REST `prdy_vrss`는 하락 시 음수 포함 여부 직접 실측 못 함(실측 시점 상승 전환) — 단 동일 응답 내 `pgtr_ntby_qty:"-2048088"` 등 음수 표기 실측으로 **signed 추정 강함** 🟡. 파서는 부호필드 의존 대신 **signed 값 직접 파싱 + sign 필드는 검증용**으로 설계하면 양쪽 표현에 안전. `QuoteParsingTests`(KIS 재작성)로 잠금.
 
-### 종목 조회 (등록 시 종목명·초기 시세)
+### 부호·스케일 요약 (파서 잠금 기준)
 
-| 항목 | 추정 스펙 | 출처 | 상태 |
-|---|---|---|---|
-| 용도 | 종목코드(6자리) → 종목명 + 초기 현재가·전일종가·등락 | — | 🔴 정확한 엔드포인트 미확인 |
-| 추정 경로 | 키움 REST 시세/종목정보 계열(예: 주식기본정보·현재가). 정확한 path·요청 헤더(`api-id`/`tr_id` 류)·응답 키 미확인 | .NET 래퍼 추론 | 🔴 |
-| 실패 케이스 | 미존재 코드 → 등록 실패 안내 / 네트워크 오류 → 재시도 | — | 구현 처리 |
+| 항목 | 확정값 |
+|---|---|
+| 가격 단위 | 원, 정수 문자열, 스케일 없음 (REST·WS 동일) |
+| 등락률 | %, plain decimal 문자열 (`-1.25`, `0.83`) |
+| 부호 체계 | sign 필드: 2=상승·5=하락(실측) / 1·3·4 🟡. WS 대비·등락률 값 자체 signed(실측) |
+| 종목코드 | REST·WS 모두 6자리 순수 — 키움 잔고 A접두 이슈 없음(시세 전용 scope에선 `normalize6` 불요) |
+| 체결시간 | HHMMSS(KST) — MarketClock은 `Asia/Seoul` 고정 필수(로컬TZ 오판 방지, s14 교훈) |
 
-- **확정 필요**: 종목 조회 엔드포인트의 정확한 path·tr 식별자·응답 필드(종목명, 현재가, 전일종가, 등락액, 등락률 키). 실측 전까지 `KiwoomRESTClient`는 응답 파싱을 격리된 디코딩 함수로 두어 실제 키 확정 시 한 곳만 수정.
+## [3] watchlist-realtime KIS 이식 체크리스트 (앱 영향)
 
-### 실시간 체결 구독 (WebSocket)
+1. **Info.plist ATS 예외** — `ops.koreainvestment.com` 평문 ws 허용(NSExceptionDomains).
+2. **TokenManager**: 발급 호출만 tokenP로 교체(actor 구조 유지). 분당 1회 제한 → 캐시 + 재발급 margin. 만료 = `expires_in` 또는 `access_token_token_expired` 파싱.
+3. **WS 클라이언트**: approval_key 발급 단계 추가 → 구독 envelope 교체 → PINGPONG echo → **46필드 청킹 파서**(멀티 레코드 번들 처리 필수).
+4. **파서 재작성**: `KiwoomQuoteParser` → KIS 파서. signed 값 직접 파싱 + sign 필드 검증용. `QuoteParsingTests` KIS 기준 재잠금(Units & Signs Audit).
+5. **🔴 종목명 확보 경로 확정** — inquire-price에 종목명 없음. 등록 플로우(코드 입력→이름 표시) 설계 의존. PoC 실측 후 본 문서 갱신.
+6. 자격증명: 앱 로드 정책 결정(env 직접 vs Keychain 정석 — 보안·휴대성 트레이드오프, `decisions/2026-06-03-kis-credentials-from-env.md` §앱 본체).
 
-| 항목 | 추정 스펙 | 출처 | 상태 |
-|---|---|---|---|
-| 프로토콜 | WSS 단일 연결, 종목코드 set 구독 등록/해제 메시지 | .NET 래퍼 | 🔴 메시지 포맷 미확인 |
-| 동시 등록 한도 | ~40종목 / WS 1연결(추정) | .NET 래퍼 | 🟡 |
-| 수신 페이로드 | 체결 단위 현재가·등락·체결시각. **필드명·스케일(원 단위/호가 단위)·부호 규칙 미확인** | 추론 | 🔴 |
-| 별도 신청/요금 | 표준 키로 수신 가능 여부 — **미확인(Premise #1)** | 추론 | 🔴 |
-| 모의환경 수신 | 모의에서 실시간 체결 수신 가능 여부 — **미확인(Premise #2)** | 추론 | 🔴 |
+### 미실측/미확정 잔여
 
-- **부호·스케일 주의**(Sprint Execution Rules §Units & signs): WS 페이로드의 현재가·등락액 단위(원), 등락률(% vs 소수), 등락 부호 규칙은 실측으로 확정하고 `QuoteParsingTests`로 잠근다. PASS 전 Units & Signs Audit 필수.
-- 앱 측: `KiwoomWebSocketClient`가 종목코드 set 구독/해제·재연결(지수 백오프)·끊김 이벤트 emit. 슬롯 예산 추상화는 두지 않음(하이브리드 경계 — architecture.md).
+- 🔴 종목명 조회 TR(위 5번).
+- 🟡 REST `prdy_vrss` 하락 표현(다음 하락 시점 실측 1건이면 종결).
+- 🟡 WS 동시 등록 한도(커뮤니티 41건 설) — 다종목 구독 시 실측.
+- 🟡 모의(VTS) 도메인 전 흐름 — 실전 검증 완료라 v1 불요.
+- 🟡 토큰 만료/401·EGW 오류 응답 형태 — 이식 후 에러 분기 시 실측.
 
-### 미해결 (sprint 전 실측 대상)
+## ⏸️ 보류 — 계좌/잔고 (holdings-pnl)
 
-- **Premise #1 (🔴 최대 리스크)**: 표준 키 WS 체결 수신 가능 여부. **키 발급 직후 PoC 1건 필수.**
-- Premise #2 (모의환경 실시간), #3 (슬롯 한도), #6 (토큰 24h 재발급) — 동일 PoC에서 검증.
-- 종목 조회·WS 메시지의 정확한 경로·필드·스케일 — 실측으로 교정 전까지 🔴/🟡 유지.
+KIS = **시세 전용**(2026-06-01 scope 확정, 계좌 정보 불필요)이라 잔고 TR은 미실측·미사용. holdings-pnl 재개 시:
+- KIS 국내주식 잔고조회 TR 실측(🟡 추정 TTTC8434R 계열 — 단정 금지) + 필드 매핑 재도출.
+- **결정 A**(`decisions/2026-05-29-holdings-pnl-display-policy.md`, 단순 평가손익 산식)는 산식·캡션 정책 자체는 provider 무관 생존 — 입력 필드만 KIS 기준 재도출.
+- 키움 kt00018 실측(§부록)은 필드 시맨틱 참고용 보존.
+
+## 부록 — 키움 legacy (현행 앱 코드 의존분, [3] 완료 시 삭제)
+
+> 2026-05-29 실측 확정분 압축. 키움은 **지정단말기(8050) 제약**(외부망 토큰 발급 거부, 2026-05-30 실측)으로 폐기 결정. 상세 이력은 git history(2026-05-28~29 본 문서) 참조.
+
+| 항목 | 실측 확정값(키움) |
+|---|---|
+| REST base | `https://api.kiwoom.com` / 토큰 `POST /oauth2/token`(`secretkey`) → `{token, expires_dt(KST yyyyMMddHHmmss), return_code}` 24h |
+| WS | `wss://api.kiwoom.com:10000/api/dostk/websocket` — LOGIN→REG(`data[item,type=0B]`)→PING echo→REAL |
+| WS 0B FID | 10 현재가(부호=방향·abs) / 11 전일대비(부호) / 12 등락률% / 13 누적거래량 / 15 체결량 / 16·17·18 시·고·저 / 20 체결시각 / 27·28 호가 — 원 단위, 스케일 없음 |
+| 종목조회 | `POST /api/dostk/stkinfo` header `api-id: ka10001`, body `{stk_cd}` → `stk_nm`·`cur_prc`(부호)·`base_pric`·`pred_pre`·`flu_rt` — **종목명 포함**(KIS와 차이) |
+| 잔고 | `POST /api/dostk/acnt` header `api-id: kt00018` → `acnt_evlt_remn_indv_tot[]`: `stk_cd`(**A접두**)·`stk_nm`·`rmnd_qty`·`pur_pric`(표시용)·`pur_amt`(authoritative)·`cur_prc`·`evltv_prft`(수수료·세금 차감)·`prft_rt` + 합산 `tot_*`. zero-padded 문자열·원/주 정수 |
+| 잔고 핵심 발견 | `evltv_prft = evlt_amt − pur_amt − sum_cmsn − tax` → PRD 단순식과 수수료+세금만큼 불일치 → **결정 A**(단순식+캡션)의 실측 근거 |
+| 파서 잠금 | `KiwoomQuoteParser` + `QuoteParsingTests` — price=abs·change 부호 보존·prevClose=base_pric(REST) 또는 price−change(WS) |
+
+- 키움 자격증명 Keychain `kr.co.kiwoom.paragon.{appkey,appsecret}` — 앱 조립 루트(`AppDelegate`)가 현재 이를 읽음. KIS 이식 시 교체.
+- 미실측 잔여였던 키움 Premise #2(모의 실시간)·#3(슬롯 한도)·REMOVE 동작은 폐기로 무의미.
