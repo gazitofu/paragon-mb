@@ -8,8 +8,8 @@
 - 상태: done  (자동화 영역 — Task 1~6 전부 done 2026-06-04. 라이브/수동 검증 섹션은 오너 게이트 잔여)
 - SSOT 동기화 검증: architecture.md ✅(architect-design 사전 갱신 5590cd3, T0 정합 확인 완료) / API_SPEC.md ✅(Spec Patch 명시 "현 시점 스펙 변경 0" — §부록 키움 legacy 삭제는 라이브 검증 완료 후 키움 소스 정리와 함께)
 - 브랜치: feat/kis-migration (로컬 feature 브랜치 — remote 부재로 PR 생략. 사용자 승인 2026-06-04)
-- merge_pending: true  (사용자 결정 2026-06-04 — 라이브 골든패스 V-A* PASS 후 main 머지. 라이브 게이트는 브랜치 빌드로 진행)
-- archive_pending: true  (사용자 결정 2026-06-04 — 라이브 검증 후 archive. SOURCE: Vault prd/kis-migration → DEST: archive/appdev/PARAGON-MB/prd/{날짜}_kis-migration/)
+- merge_pending: false  (라이브 골든패스 V-A1~A6 전부 PASS 2026-06-05 장중 — 사용자 승인으로 main ff 머지 진행. V-B1 토큰 24h end-to-end만 비차단 잔여)
+- archive_pending: false  (2026-06-05 archive 진행 — SOURCE: Vault prd/kis-migration → DEST: archive/appdev/PARAGON-MB/prd/2026-06-05_kis-migration/)
 - 라이브 PASS 후 cleanup 스프린트 후보: 키움 legacy 소스 5파일 삭제 + API_SPEC §부록 키움 legacy 삭제 + AddSymbolViewModel 주석 정리 + 키움 Keychain 항목(kr.co.kiwoom.paragon.*) 정리 검토
 - 이전 plan 백업: SPRINT_PLAN-2026-06-02.md (refresh-recovery, done)
 - 요구사항 SSOT: git docs/API_SPEC.md §[3] 이식 체크리스트 7항 + §실측 확정. 태스크 정의 SSOT: Vault prd/kis-migration/tasks.md (T0~T10 + V-*).
@@ -91,13 +91,14 @@
 
 > 거래일 09:00–15:30 KST 한정 항목 포함. 명세 = Vault prd/kis-migration/tasks.md §검증 단계.
 
-- [ ] V-A1 (라이브): 종목 등록 → CTPF1002R 종목명 + 초기 시세, EGW00201 0회
-- [ ] V-A1e (라이브): 등록 실패 분기 (P6 실제 형태 관측·보정)
-- [ ] V-A2 (라이브): WS 체결 0.3s 내 하이라이트·갱신 (멀티 레코드 청킹)
-- [ ] V-A3 (라이브): 부호 체계 정확 표시 + P5 REST 하락 부호 종결 (비-blocking)
-- [ ] V-A4 (라이브): 20개 한도 + P7 WS 한도 종결
-- [ ] V-A5 (라이브): 삭제 시 구독 즉시 제거
-- [ ] V-A6 (라이브): WS 재연결 구독 자동 복구
-- [ ] V-B1 (일부 라이브): 토큰 24h 갱신 지속 end-to-end
+- [x] V-A1 (라이브): 종목 등록 → CTPF1002R 종목명 + 초기 시세, EGW00201 0회 — **PASS 2026-06-05 장중(금 09:3x~)**. 오너 확인: 종목명 자동 표시 + 초기 시세 렌더 정상, 에러 0.
+- [x] V-A1e (라이브): 등록 실패 분기 — **PASS 2026-06-05**. 미존재 코드 → "등록할 수 없는 종목코드" 인라인 에러 확인 (**P6 관측 종결** — 보정 불요).
+- [x] V-A2 (라이브): WS 체결 0.3s 내 하이라이트·갱신 — **PASS 2026-06-05 장중**. 멀티 레코드 청킹 회귀 없음 (최대 회귀 후보였음).
+- [x] V-A3 (라이브): 부호 체계 정확 표시 — **PASS 2026-06-05**. 하락 종목 음수 부호 정확 표시 실측 → **P5(REST `prdy_vrss` 하락 부호) 종결** — signed 직접 파싱 검증 확인.
+- [x] V-A4 (라이브): 20개 한도 + P7 WS 한도 종결 — **PASS 2026-06-05 장중**. 오너 확인: 20개 도달 후 추가 시 한도 안내·미추가 + **20개 동시 구독 전 종목 시세 갱신 정상 → P7 종결** (WS 한도 ≥20, `Policy.maxWatchlistCount` 유지).
+- 🆕 발견 이슈 (비차단, 별도 픽스 — KIS 회귀 아님): KRX 신형 알파뉴메릭 티커(예: 에임드바이오 `0009K0`) 입력 불가 — `AddSymbolView.swift:38` `filter(\.isNumber)` + `AddSymbolViewModel.swift:53` 숫자-only guard (Phase D 기존 코드). REST/WS/영속화는 문자열 키라 무영향. main 머지 후 별도 소형 픽스 예정 (V-C4 scope 잠금 보존).
+- [x] V-A5 (라이브): 삭제 시 구독 즉시 제거 — **PASS 2026-06-05**. 목록 즉시 제거 + 잔여 종목 갱신 지속.
+- [x] V-A6 (라이브): WS 재연결 구독 자동 복구 — **PASS 2026-06-05**. Wi-Fi off→on 후 시세 갱신 자동 재개 (**refresh-recovery V13 겸사 PASS** — KIS 전환으로 처음 검증 가능해진 항목).
+- [ ] V-B1 (일부 라이브): 토큰 24h 갱신 지속 end-to-end — **잔여**. 2026-06-05 장중 세션 이상 없음 관찰, 24h 경과 자동 재발급 end-to-end는 미종결 (장시간 상주 관찰 필요).
 - [x] V-C3 (장외 가능): 장외 종가 + 장상태 라벨 + 갱신 정지 — **PASS 2026-06-04 장외(목 18:00경)**. 오너 확인: 관심종목 7개 종가 렌더 + "정규장 마감 · 종가 기준" 라벨 + 하이라이트/갱신 0 + auth-failed 배너 없음.
 - [x] (겸사) keychain 서명 오너 런타임 게이트 — **PASS 2026-06-04**. ① 첫 실행(KIS 항목 첫 접근) "Always Allow" 클릭 → ② cdhash 변경 빌드(임시 프로브 1줄, CDHash 5e35c06a→f797cc56)에서 **무프롬프트 + 키 읽기 정상** = DR 기반 신뢰 영구지속 경험 증명 → ③ 프로브 원복(결정론적 빌드로 CDHash 원값 복귀 확인). s20 잔여 종결. ※ 검증 메모: touch·clean build로는 cdhash 불변(결정론적 빌드) — 교차빌드 검증엔 실코드 변경 필요.
