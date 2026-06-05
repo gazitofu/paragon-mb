@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat: 앱 아이콘 추가 — 브랜드 4면 컷 보석 마크 (Midnight 라운디드 스퀘어, Finder·Launchpad 노출)
 
 ## [0.1.0] - 2026-06-05
 - fix: KRX 알파뉴메릭 티커(예: 에임드바이오 0009K0) 종목 추가 입력 허용 — 숫자-only 검증을 영숫자로 확장, 소문자 자동 대문자화
