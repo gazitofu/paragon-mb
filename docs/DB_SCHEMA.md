@@ -1,7 +1,6 @@
 # Data / Storage Schema — PARAGON-MB
 
-> 갱신: 2026-06-04 (KIS 전환 [2] — provider 전환 반영. 키움 → KIS 결정: `decisions/2026-05-30-migrate-kiwoom-to-kis.md`).
-> ⚠️ 앱 본체는 아직 키움 코드 경로([3] 이식 전) — KIS 항목은 목표 스펙.
+> 갱신: 2026-06-05 (KIS 전환 [3] 완료 — 앱 본체 KIS 코드 경로 전환·키움 legacy 삭제. 키움 → KIS 결정: `decisions/2026-05-30-migrate-kiwoom-to-kis.md`).
 
 조회 전용 앱 — 서버 DB 없음. 로컬 영속만:
 
@@ -63,8 +62,7 @@
 |---|---|
 | KIS Keychain 서비스 | `kr.co.koreainvestment.paragon.{appkey,appsecret}` (`kSecClassGenericPassword`) |
 | KIS env 파일(tools 한정) | `~/.config/secrets/api.env`의 `KIS_APP_KEY`/`KIS_APP_SECRET` (override=`PARAGON_SECRETS_ENV`) — PoC 도구는 **env 우선 → Keychain 폴백**(결정 `decisions/2026-06-03-kis-credentials-from-env.md`) |
-| 키움 Keychain(legacy) | `kr.co.kiwoom.paragon.{appkey,appsecret}` — 현행 앱 본체(`KeychainStore`)가 읽는 경로. [3] 이식 시 KIS로 교체 |
-| 앱 본체 로드 정책 | **[3]에서 결정** — env 직접 읽기는 평문 보안 약화·절대경로 비휴대성 리스크(앱은 Keychain 정석 권장) |
+| 앱 본체 로드 정책 | Keychain 정석 (s23 결정) — env 직접 읽기는 평문 보안 약화·절대경로 비휴대성 리스크로 tools 한정. 키움 legacy 항목(`kr.co.kiwoom.paragon.*`)은 cleanup으로 삭제(2026-06-05) |
 | 소유 | `PMCore/Auth/KeychainStore` |
 | 평문 금지 | git·UserDefaults·로그 평문 저장 금지(Premise #7). env 파일은 사용자 관리 영역(`~/.config/secrets/`, git 밖) |
 

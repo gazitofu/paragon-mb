@@ -47,7 +47,7 @@ macOS 메뉴바 상주 앱. AppKit `NSStatusItem`+`NSPopover` 단일 팝오버 �
 │ PMCore (로컬 SwiftPM 패키지 — 테스트 대상)   │
 │  Domain/   — 순수 모델·정책(엔티티, 장 상태) │
 │  Service/  — 시세 오케스트레이션(REST+WS 통합)│
-│  Network/  — 키움 REST·WebSocket 클라이언트  │
+│  Network/  — KIS REST·WebSocket 클라이언트   │
 │  Auth/     — 토큰 발급·재발급·Keychain       │
 │  Store/    — 관심종목 JSON 영속              │
 └──────────────────────────────────────────────┘
@@ -113,7 +113,7 @@ PARAGON-MB/
 - **WatchlistViewModel** (`@MainActor ObservableObject`): 화면 상태(loading/normal/ws-disconnected/authFailed/empty)의 단일 소유자. QuoteService의 `AsyncStream`을 구독해 행 데이터를 갱신하고, 등록/삭제 사용자 이벤트를 Service·Store로 위임. 뷰는 이 ViewModel의 `@Published` 상태만 렌더한다. **refresh 복구**: `refresh()`가 authFailed 포함 막힌 상태에서 `service.start` 재트리거(중복 가드 `isRefreshing` 직교 플래그) — 헤더 수동 버튼·loadFailed 배너·네트워크 복구 콜백 3진입이 수렴(retry() 흡수).
 - **NetworkPathReachability** (`NetworkReachability` protocol, PMCore Domain/lib): `NWPathMonitor` 래핑. unsatisfied→satisfied transition-edge에서만 `onRecovered` 1회 발화(최초 satisfied 무시) → VM `refresh()` 자동 호출. VM/UI는 OS 모니터링 API를 모른다(경계).
 - **QuoteService**: 관심종목 변경 → REST 초기값 로드 → WS 구독 등록/해제 오케스트레이션. 장 상태(MarketClock)에 따라 WS 구독을 켜고 끈다(장 외에는 구독 없이 마지막 값 유지). ViewModel에 `AsyncStream<QuoteUpdate>` 제공.
-- **KiwoomWebSocketClient**: `URLSessionWebSocketTask` 래핑. 연결·재구독·재연결(지수 백오프) 담당. 끊김/복구를 상태 이벤트로 emit. **슬롯 예산 추상화는 두지 않음** — 단순 종목코드 set 구독/해제만(하이브리드 경계).
+- **KISWebSocketClient** (키움 → KIS 치환, 2026-06-05): `URLSessionWebSocketTask` 래핑. 연결·재구독·재연결(지수 백오프) 담당. 끊김/복구를 상태 이벤트로 emit. **슬롯 예산 추상화는 두지 않음** — 단순 종목코드 set 구독/해제만(하이브리드 경계).
 - **TokenManager** (`actor`): 토큰 1개 소유·만료 시각 추적. 만료 임박(예: 잔여 < 임계) 또는 401 응답 시 재발급. 재발급 실패는 상태로 표면화. REST·WS 클라이언트는 이 actor에서 유효 토큰을 받아 사용.
 - **MarketClock**: 순수 함수 — `Date` → `MarketStatus`. 정규장 경계·점심 연속거래·공휴일 캘린더(상수 테이블)를 입력으로. 외부 호출 없음 → 테스트 100% 결정적.
 - **WatchlistStore**: 종목코드+순서 JSON 영속. atomic write(임시 파일 → rename). 손상 파일은 빈 목록으로 폴백.

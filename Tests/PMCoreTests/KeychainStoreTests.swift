@@ -1,8 +1,8 @@
 import XCTest
 @testable import PMCore
 
-/// Q-secret 보조: Keychain upsert/get/delete 라운드트립. 임시 서비스명 사용 — 실 키움 키 비건드림.
-/// (Xcode 테스트 호스트에서 로그인 Keychain 접근. 실 자격증명 `kr.co.kiwoom.paragon.*`은 절대 미사용.)
+/// Q-secret 보조: Keychain upsert/get/delete 라운드트립. 임시 서비스명 사용 — 실 KIS 키 비건드림.
+/// (Xcode 테스트 호스트에서 로그인 Keychain 접근. 실 자격증명 `kr.co.koreainvestment.paragon.*`은 절대 미사용.)
 final class KeychainStoreTests: XCTestCase {
 
     private let store = KeychainStore()
@@ -10,7 +10,7 @@ final class KeychainStoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        service = "kr.co.kiwoom.paragon.test-\(UUID().uuidString)"
+        service = "kr.co.paragon.keychain-test-\(UUID().uuidString)"
     }
 
     override func tearDown() {

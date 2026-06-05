@@ -3,7 +3,7 @@ import Security
 
 /// 자격증명 Keychain CRUD 얇은 래퍼(보안 — 평문 저장 금지, DB_SCHEMA §자격증명).
 /// 값은 절대 로그·예외 메시지에 노출하지 않는다(Floor 4).
-/// 서비스 식별자는 `KiwoomCredential` 상수 사용(PoC와 동일 `kr.co.kiwoom.paragon.*` — 사용자 결정 2026-05-29).
+/// 서비스 식별자는 `KISCredential` 상수 사용(`kr.co.koreainvestment.paragon.*` — 사용자 결정 2026-06-04).
 public struct KeychainStore {
     public enum KeychainError: Error, Equatable {
         case unexpectedStatus(OSStatus)
@@ -60,15 +60,9 @@ public struct KeychainStore {
     }
 }
 
-/// 키움 자격증명 Keychain 서비스 식별자(SSOT). PoC·앱 공유 — 마이그레이션 불필요.
-public enum KiwoomCredential {
-    public static let appKey = "kr.co.kiwoom.paragon.appkey"
-    public static let appSecret = "kr.co.kiwoom.paragon.appsecret"
-}
-
-/// KIS(한국투자증권) 자격증명 Keychain 서비스 식별자(SSOT).
-/// KiwoomCredential과 병존 — AppDelegate가 KISCredential로 전환(Task 10)까지 두 식별자 공존.
+/// KIS(한국투자증권) 자격증명 Keychain 서비스 식별자(SSOT). PoC·앱 공유.
 /// CRUD 로직은 KeychainStore 메서드 공유(변경 없음).
+/// (키움 `KiwoomCredential`은 KIS 전환 cleanup으로 삭제 — 2026-06-05.)
 public enum KISCredential {
     public static let appKey = "kr.co.koreainvestment.paragon.appkey"
     public static let appSecret = "kr.co.koreainvestment.paragon.appsecret"

@@ -1,7 +1,6 @@
 import Foundation
 
 /// KIS(한국투자증권) Open API URL 상수 레이어.
-/// KiwoomEnvironment와 병존 — 치환(Task 5 AppDelegate 조립)까지 두 파일 공존 유지.
 /// 요구사항 SSOT: docs/API_SPEC.md §실측 확정·§[3] 이식 체크리스트.
 public enum KISEnvironment {
     /// REST base URL — 실전. HTTPS, 포트 9443.

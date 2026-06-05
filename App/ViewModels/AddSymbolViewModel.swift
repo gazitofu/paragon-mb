@@ -2,7 +2,7 @@ import Foundation
 import PMCore
 
 /// 종목 등록 lookup 실패 분류(M1 경계 — child는 REST/token 세부를 모른다).
-/// 조립 루트가 `KiwoomRESTClient.RESTError` → 본 enum으로 매핑해 주입한다.
+/// 조립 루트가 `KISRESTClient.RESTError` → 본 enum으로 매핑해 주입한다.
 enum SymbolLookupError: Error {
     case invalidCode   // 미존재/유효하지 않은 종목코드
     case network       // 네트워크/토큰 등 일시 실패

@@ -8,7 +8,7 @@ public actor KISWebSocketClient {
 
     // === SECTION: EVENT_ENUM ===
 
-    /// QuoteService 계약 경계 — Event 시그니처 KiwoomWebSocketClient와 불변(QuoteService.handle 무영향).
+    /// QuoteService 계약 경계 — Event 시그니처는 이식 전(키움) 클라이언트와 동일 유지(QuoteService.handle 무영향).
     public enum Event: Sendable {
         case connected
         case disconnected
@@ -39,7 +39,7 @@ public actor KISWebSocketClient {
         self.session = session
         self.approvalKeyProvider = approvalKeyProvider
         var cont: AsyncStream<Event>.Continuation!
-        // makeStream은 macOS 14+ — 클로저 패턴으로 macOS 13 호환(KiwoomWebSocketClient 계승)
+        // makeStream은 macOS 14+ — 클로저 패턴으로 macOS 13 호환
         self.events = AsyncStream<Event> { cont = $0 }
         self.emit = cont
     }

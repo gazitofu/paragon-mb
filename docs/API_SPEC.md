@@ -130,21 +130,4 @@
 KIS = **시세 전용**(2026-06-01 scope 확정, 계좌 정보 불필요)이라 잔고 TR은 미실측·미사용. holdings-pnl 재개 시:
 - KIS 국내주식 잔고조회 TR 실측(🟡 추정 TTTC8434R 계열 — 단정 금지) + 필드 매핑 재도출.
 - **결정 A**(`decisions/2026-05-29-holdings-pnl-display-policy.md`, 단순 평가손익 산식)는 산식·캡션 정책 자체는 provider 무관 생존 — 입력 필드만 KIS 기준 재도출.
-- 키움 kt00018 실측(§부록)은 필드 시맨틱 참고용 보존.
-
-## 부록 — 키움 legacy (현행 앱 코드 의존분, [3] 완료 시 삭제)
-
-> 2026-05-29 실측 확정분 압축. 키움은 **지정단말기(8050) 제약**(외부망 토큰 발급 거부, 2026-05-30 실측)으로 폐기 결정. 상세 이력은 git history(2026-05-28~29 본 문서) 참조.
-
-| 항목 | 실측 확정값(키움) |
-|---|---|
-| REST base | `https://api.kiwoom.com` / 토큰 `POST /oauth2/token`(`secretkey`) → `{token, expires_dt(KST yyyyMMddHHmmss), return_code}` 24h |
-| WS | `wss://api.kiwoom.com:10000/api/dostk/websocket` — LOGIN→REG(`data[item,type=0B]`)→PING echo→REAL |
-| WS 0B FID | 10 현재가(부호=방향·abs) / 11 전일대비(부호) / 12 등락률% / 13 누적거래량 / 15 체결량 / 16·17·18 시·고·저 / 20 체결시각 / 27·28 호가 — 원 단위, 스케일 없음 |
-| 종목조회 | `POST /api/dostk/stkinfo` header `api-id: ka10001`, body `{stk_cd}` → `stk_nm`·`cur_prc`(부호)·`base_pric`·`pred_pre`·`flu_rt` — **종목명 포함**(KIS와 차이) |
-| 잔고 | `POST /api/dostk/acnt` header `api-id: kt00018` → `acnt_evlt_remn_indv_tot[]`: `stk_cd`(**A접두**)·`stk_nm`·`rmnd_qty`·`pur_pric`(표시용)·`pur_amt`(authoritative)·`cur_prc`·`evltv_prft`(수수료·세금 차감)·`prft_rt` + 합산 `tot_*`. zero-padded 문자열·원/주 정수 |
-| 잔고 핵심 발견 | `evltv_prft = evlt_amt − pur_amt − sum_cmsn − tax` → PRD 단순식과 수수료+세금만큼 불일치 → **결정 A**(단순식+캡션)의 실측 근거 |
-| 파서 잠금 | `KiwoomQuoteParser` + `QuoteParsingTests` — price=abs·change 부호 보존·prevClose=base_pric(REST) 또는 price−change(WS) |
-
-- 키움 자격증명 Keychain `kr.co.kiwoom.paragon.{appkey,appsecret}` — 앱 조립 루트(`AppDelegate`)가 현재 이를 읽음. KIS 이식 시 교체.
-- 미실측 잔여였던 키움 Premise #2(모의 실시간)·#3(슬롯 한도)·REMOVE 동작은 폐기로 무의미.
+- 키움 kt00018 실측은 필드 시맨틱 참고용 — git history(2026-05-29~06-04 본 문서 §부록, 커밋 `b569123`·`6b6c554`) 참조. 키움 legacy 부록은 KIS 이식 완료로 삭제(2026-06-05).
