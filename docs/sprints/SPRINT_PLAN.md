@@ -13,7 +13,7 @@
 - 라이브 PASS 후 cleanup 스프린트 후보: 키움 legacy 소스 5파일 삭제 + API_SPEC §부록 키움 legacy 삭제 + AddSymbolViewModel 주석 정리 + 키움 Keychain 항목(kr.co.kiwoom.paragon.*) 정리 검토
 - 이전 plan 백업: SPRINT_PLAN-2026-06-02.md (refresh-recovery, done)
 - 요구사항 SSOT: git docs/API_SPEC.md §[3] 이식 체크리스트 7항 + §실측 확정. 태스크 정의 SSOT: Vault prd/kis-migration/tasks.md (T0~T10 + V-*).
-- closeout 체크리스트: ① API_SPEC §부록 키움 legacy 삭제 (reviewer 메모 — affects 등재, 이식 완료 시점) ② CHANGELOG required ③ release closeout required ④ main 머지
+- closeout 체크리스트: ① API_SPEC §부록 키움 legacy 삭제 ✅(s28 `e32de2f`) ② CHANGELOG ✅(Unreleased → v0.1.0 2026-06-05) ③ release closeout ✅(v0.1.0 태그, .dmg는 사용자 결정으로 백로그 유지 2026-06-05) ④ main 머지 ✅(s27 `af122fa`) — **전 항목 마감, 스프린트 완전 종결**
 
 ## Tasks
 
