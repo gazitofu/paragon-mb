@@ -96,7 +96,7 @@
 - [x] V-A2 (라이브): WS 체결 0.3s 내 하이라이트·갱신 — **PASS 2026-06-05 장중**. 멀티 레코드 청킹 회귀 없음 (최대 회귀 후보였음).
 - [x] V-A3 (라이브): 부호 체계 정확 표시 — **PASS 2026-06-05**. 하락 종목 음수 부호 정확 표시 실측 → **P5(REST `prdy_vrss` 하락 부호) 종결** — signed 직접 파싱 검증 확인.
 - [x] V-A4 (라이브): 20개 한도 + P7 WS 한도 종결 — **PASS 2026-06-05 장중**. 오너 확인: 20개 도달 후 추가 시 한도 안내·미추가 + **20개 동시 구독 전 종목 시세 갱신 정상 → P7 종결** (WS 한도 ≥20, `Policy.maxWatchlistCount` 유지).
-- 🆕 발견 이슈 (비차단, 별도 픽스 — KIS 회귀 아님): KRX 신형 알파뉴메릭 티커(예: 에임드바이오 `0009K0`) 입력 불가 — `AddSymbolView.swift:38` `filter(\.isNumber)` + `AddSymbolViewModel.swift:53` 숫자-only guard (Phase D 기존 코드). REST/WS/영속화는 문자열 키라 무영향. main 머지 후 별도 소형 픽스 예정 (V-C4 scope 잠금 보존).
+- [x] 🆕 발견 이슈 (비차단, 별도 픽스 — KIS 회귀 아님): KRX 신형 알파뉴메릭 티커(예: 에임드바이오 `0009K0`) 입력 불가 — `AddSymbolView.swift:38` `filter(\.isNumber)` + `AddSymbolViewModel.swift:53` 숫자-only guard (Phase D 기존 코드). REST/WS/영속화는 문자열 키라 무영향. → **종결 2026-06-05 (커밋 `77c9ada`)**: 입력 필터·submit 검증 영숫자 확장 + 소문자 대문자 정규화 + 단위 테스트 9건(AppTests 11→20). **라이브 실측 PASS 2026-06-05 장중** — `0009K0` 등록 → 종목명·시세·WS 갱신 정상 (KIS REST/WS 알파뉴메릭 수용 확인, 🟡 해소).
 - [x] V-A5 (라이브): 삭제 시 구독 즉시 제거 — **PASS 2026-06-05**. 목록 즉시 제거 + 잔여 종목 갱신 지속.
 - [x] V-A6 (라이브): WS 재연결 구독 자동 복구 — **PASS 2026-06-05**. Wi-Fi off→on 후 시세 갱신 자동 재개 (**refresh-recovery V13 겸사 PASS** — KIS 전환으로 처음 검증 가능해진 항목).
 - [ ] V-B1 (일부 라이브): 토큰 24h 갱신 지속 end-to-end — **잔여**. 2026-06-05 장중 세션 이상 없음 관찰, 24h 경과 자동 재발급 end-to-end는 미종결 (장시간 상주 관찰 필요).
