@@ -37,10 +37,17 @@ final class AddSymbolViewModel: ObservableObject {
         self.onCancel = onCancel
     }
 
+    /// 입력 정규화(뷰 onChange 필터·submit 공용): ASCII 영숫자만 허용 → 6자 절단 → 대문자화.
+    /// KRX 알파뉴메릭 티커(예: 에임드바이오 0009K0) 지원 — ops/2026-06-05-alphanumeric-ticker-input.md.
+    /// filter→prefix→uppercase 순서: ASCII 한정 후 대문자화라 글자 수 불변(유니코드 팽창 엣지 차단).
+    nonisolated static func sanitize(_ raw: String) -> String {
+        String(raw.filter { $0.isASCII && ($0.isNumber || $0.isLetter) }.prefix(6)).uppercased()
+    }
+
     /// 등록 시도(버튼 또는 Return). 한도→중복→형식 순 선검사 후 lookup(M1 idle/loading 행).
     func submit() {
         guard phase != .loading else { return }
-        let code = codeInput.trimmingCharacters(in: .whitespaces)
+        let code = codeInput.trimmingCharacters(in: .whitespaces).uppercased()
 
         if existing.count >= Policy.maxWatchlistCount {
             phase = .error("관심종목은 최대 \(Policy.maxWatchlistCount)개까지 등록할 수 있습니다")
@@ -50,7 +57,7 @@ final class AddSymbolViewModel: ObservableObject {
             phase = .error("이미 등록된 종목입니다")
             return
         }
-        guard code.count == 6, code.allSatisfy(\.isNumber) else {
+        guard code.count == 6, code.allSatisfy({ $0.isASCII && ($0.isNumber || $0.isLetter) }) else {
             phase = .error("등록할 수 없는 종목코드입니다")
             return
         }

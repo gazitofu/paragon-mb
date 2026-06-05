@@ -35,7 +35,7 @@ struct AddSymbolView: View {
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                     .onChange(of: viewModel.codeInput) { newValue in
-                        let filtered = String(newValue.filter(\.isNumber).prefix(6))
+                        let filtered = AddSymbolViewModel.sanitize(newValue)
                         if filtered != newValue { viewModel.codeInput = filtered }
                     }
                     .onSubmit { viewModel.submit() }
